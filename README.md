@@ -557,7 +557,8 @@ pipOS/
 ├── js/
 │   ├── util.js                  # DOM helpers ($ / $$), local storage wrappers, clamp, reduce-motion
 │   ├── audio.js                 # Web Audio synthesizer, pentatonic scale, impulse convolver, generative lullaby
-│   ├── pip.js                   # Cursor/touch eye tracking, head tilt, moods, greeting, secret star Easter egg
+│   ├── pip.js                   # Cursor/touch eye tracking, head tilt, moods, greeting, section glance
+│   ├── pip-glance.test.js       # Node test suite for section observer glance hook & look()
 │   ├── toys.js                  # 4 playable toys: Lullaby Lab, Nightlight, Rattle & Blocks, Dream Delivery
 │   ├── fx.js                    # Sparkle cursor trail, canvas confetti, dream odometer, wish wall DOM
 │   ├── wall.js                  # Wish wall backend adapter (Firebase/Supabase), rate limiting, sanitization
