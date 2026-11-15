@@ -1,9 +1,14 @@
 /* toys.js: Lullaby Lab, Nightlight Collection, Rattle & Blocks, Dream Delivery. */
 (function () {
   'use strict';
-  var PIP = window.PIP;
-  var $ = PIP.$, $$ = PIP.$$, store = PIP.store, clamp = PIP.clamp, toast = PIP.toast;
-  var reduce = PIP.reduceMotion, audio = PIP.audio;
+  var PIP = (typeof window !== 'undefined' && window.PIP) ? window.PIP : {};
+  var $ = PIP.$ || function () { return null; };
+  var $$ = PIP.$$ || function () { return []; };
+  var store = PIP.store || { get: function () { return ''; }, set: function () {} };
+  var clamp = PIP.clamp || function (v, a, b) { return Math.min(b, Math.max(a, v)); };
+  var toast = PIP.toast || function () {};
+  var reduce = PIP.reduceMotion || { matches: false };
+  var audio = PIP.audio || { isOn: function () { return false; }, note: function () {} };
 
   /* =====================================================================
      1. LULLABY LAB
@@ -531,12 +536,24 @@
   /* =====================================================================
      4. DREAM DELIVERY ROUTE (SVG path synced to scroll)
      ===================================================================== */
+  var HOUSE_STORIES = [
+    "Boo-ton fell fast asleep hugging his favourite wooden button after Pip tucked him in.",
+    "The twins curled together under a patch quilt dreaming of chasing yarn across the clouds.",
+    "Mother Hoot turned down her twig lamp and closed her eyes to gentle night breezes.",
+    "Little Wisp drifted into a warm dream of golden stars and lavender soup.",
+    "Fern curled his bushy tail around his nose and dozed off under pine branches.",
+    "Three little frogs rested on lily pads humming quiet water lullabies until morning.",
+    "The velvet moths settled around the glowing lantern enjoying peaceful, warm dreams."
+  ];
+
   function initRoute() {
     var win = $('#route'), path = $('#routePath'), rider = $('#rider'), label = $('#routeLabel'), btn = $('#flyBtn');
     if (!win || !path || !rider || !path.getTotalLength) return;
     var houses = $$('#routeSvg .house');
     var len = path.getTotalLength();
     var p = 0, manual = false;
+    var storyBox = $('#houseStory'), storyTitle = $('#houseStoryTitle'), storyText = $('#houseStoryText'), storyClose = $('#houseStoryClose');
+    var activeHouse = null;
 
     // progress at which the route passes each house
     var samples = [];
@@ -547,6 +564,94 @@
       return 1;
     });
 
+    function openStory(h, idx) {
+      var isPassed = h.classList.contains('is-lit') || h.getAttribute('data-passed') === 'true';
+      if (!isPassed) {
+        if (label) label.textContent = 'Pip is still flying! Deliver to ' + h.getAttribute('data-name') + ' first.';
+        return;
+      }
+
+      var name = h.getAttribute('data-name') || ('House ' + (idx + 1));
+      var story = h.getAttribute('data-story') || (HOUSE_STORIES && HOUSE_STORIES[idx]) || '';
+
+      if (activeHouse && activeHouse !== h) {
+        activeHouse.classList.remove('is-active');
+        activeHouse.setAttribute('aria-expanded', 'false');
+      }
+
+      activeHouse = h;
+      h.classList.add('is-active');
+      h.setAttribute('aria-expanded', 'true');
+
+      if (storyBox) {
+        if (storyTitle) storyTitle.textContent = name;
+        if (storyText) storyText.textContent = story;
+        storyBox.removeAttribute('hidden');
+        storyBox.classList.add('is-open');
+      }
+
+      if (label) {
+        label.textContent = name + ': ' + story;
+      }
+
+      if (audio && typeof audio.isOn === 'function' && audio.isOn()) {
+        audio.note(audio.SCALE[(idx + 2) % audio.SCALE.length], { dur: 0.6, gain: 0.12 });
+      }
+    }
+
+    function closeStory() {
+      if (activeHouse) {
+        activeHouse.classList.remove('is-active');
+        activeHouse.setAttribute('aria-expanded', 'false');
+        activeHouse = null;
+      }
+      if (storyBox) {
+        storyBox.setAttribute('hidden', '');
+        storyBox.classList.remove('is-open');
+      }
+    }
+
+    houses.forEach(function (h, idx) {
+      h.setAttribute('tabindex', '0');
+      h.setAttribute('role', 'button');
+      h.setAttribute('aria-haspopup', 'dialog');
+      h.setAttribute('aria-expanded', 'false');
+
+      h.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openStory(h, idx);
+      });
+
+      h.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          openStory(h, idx);
+        } else if (e.key === 'Escape') {
+          closeStory();
+        }
+      });
+    });
+
+    if (storyClose) {
+      storyClose.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeStory();
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      if (storyBox && !storyBox.hasAttribute('hidden') && !storyBox.contains(e.target)) {
+        closeStory();
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && storyBox && !storyBox.hasAttribute('hidden')) {
+        closeStory();
+      }
+    });
+
     function set(v) {
       p = clamp(v, 0, 1);
       var pt = path.getPointAtLength(len * p);
@@ -554,13 +659,20 @@
       var passed = -1;
       houses.forEach(function (h, k) {
         var on = p >= at[k];
-        h.classList.toggle('is-lit', on);
-        if (on) passed = k;
+        if (on) {
+          h.classList.add('is-lit');
+          h.setAttribute('data-passed', 'true');
+          passed = k;
+        } else if (!h.hasAttribute('data-passed')) {
+          h.classList.remove('is-lit');
+        }
       });
-      if (p <= 0.01) label.textContent = 'Waiting at the nursery window';
-      else if (p >= 0.995) label.textContent = 'All seven dreams delivered';
-      else if (passed >= 0) label.textContent = 'Delivered to ' + houses[passed].getAttribute('data-name');
-      else label.textContent = 'Taking off...';
+      if (!activeHouse) {
+        if (p <= 0.01) label.textContent = 'Waiting at the nursery window';
+        else if (p >= 0.995) label.textContent = 'All seven dreams delivered — click a house to read its story';
+        else if (passed >= 0) label.textContent = 'Delivered to ' + houses[passed].getAttribute('data-name');
+        else label.textContent = 'Taking off...';
+      }
     }
 
     function fromScroll() {
@@ -701,6 +813,7 @@
   }
 
   PIP.toys = {
+    HOUSE_STORIES: HOUSE_STORIES,
     init: function () {
       initLab();
       initLights();
@@ -710,4 +823,10 @@
       initGrowthChart();
     }
   };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      HOUSE_STORIES: HOUSE_STORIES
+    };
+  }
 })();

@@ -161,7 +161,7 @@ Theme switching is implemented via CSS Custom Properties toggled by the `data-th
 | `07` | `WINDOWS COMPONENT` | `.win` container, `.win-bar`, titlebar stripes, dots, buttons |
 | `08` | `HERO & PIP ILLUSTRATION` | Hero banner, speech bubble, SVG skull baby illustration & states |
 | `09` | `ABOUT SHEET & KEYS CHEAT SHEET` | Key-value description list, skills chips, voice sample, &lt;kbd&gt; styling, keys.txt cards |
-| `10` | `WORK GRID & TOYS` | 12-column work project grid: Lullaby Lab, Nightlight, Blocks, Route |
+| `10` | `WORK GRID & TOYS` | 12-column work project grid: Lullaby Lab, Nightlight, Blocks, Route (.route-stage, .house-story resident tooltip, .house:focus-visible) |
 | `11` | `BEDTIME STORYBOOK` | Sticky scroll-driven track, scene progression dots, SVG story scenes |
 | `12` | `WISH WALL & ODOMETER` | Guestbook form, pinned sticky notes, dream counter mechanical odometer |
 | `13` | `FOOTER & CREDITS` | Candy tape separator, haX.baby canon credits, badges |
