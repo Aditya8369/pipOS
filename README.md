@@ -442,12 +442,19 @@ node --test
 
 | Test Suite | Tests | Assertions & Scope Covered |
 | :--- | :---: | :--- |
+| [js/a11y.test.js](js/a11y.test.js) | **5** | Skip link focusability, Pip SVG accessible labels, storybook inert states, darkroom hidden item descriptions, focus outline preservation. |
+| [js/audio.test.js](js/audio.test.js) | **4** | Lullaby Lab volume slider, boundary clamping ($0.0 \le \text{vol} \le 1.0$), C-major pentatonic frequency ordering, non-copyrighted melodies. |
+| [js/i18n.test.js](js/i18n.test.js) | **4** | English and Hindi translation dictionaries, 100% key parity, scene length ceilings ($< 150$ words), `data-i18n` attribute validation. |
 | [js/maths.test.js](js/maths.test.js) | **7** | Verifies block-stacking geometry, partial overlap calculations, miss thresholds ($< 3\text{px}$), and perfect drop detection ($< 5\text{px}$). |
+| [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
+| [js/print.test.js](js/print.test.js) | **4** | Verifies `@media print` rules, `@page` setup, hiding screen chrome and canvases, disabling animations, and black-on-white 1-page profile layout. |
+| [js/pwa.test.js](js/pwa.test.js) | **5** | Verifies `manifest.webmanifest` JSON validity, standalone display mode, presence of 192px/512px/maskable icons, binary PNG headers, Apple touch icons, Service Worker pre-cache manifests, and offline fallback routing. |
+| [js/shortcuts.test.js](js/shortcuts.test.js) | **4** | Validates `#shortcuts` window structure, `keys.txt` listing of controls (1–8, arrows, Space, ?), typing input guards, and desktop rail shortcut. |
+| [js/storybook.test.js](js/storybook.test.js) | **4** | Verifies `storybook.exe` 6 illustrated scenes, touch swipe and keyboard navigation, responsive CSS layout, and reduced motion overrides. |
+| [js/touch.test.js](js/touch.test.js) | **4** | Verifies touch actions, elimination of mobile tap delay (`touch-action: manipulation`), WCAG 44×44px touch targets on taskbar, and FOIT prevention. |
 | [js/wall.test.js](js/wall.test.js) | **9** | Verifies control-character stripping, empty wish rejection, name truncation ($20$ chars), wish ceiling ($120$ chars), 15s cooldown timers, 10-minute rate limiting, and Firebase/Supabase payload parsing. |
 | [js/xss.test.js](js/xss.test.js) | **4** | Validates CSP meta tag syntax, audits source code for dangerous sinks (`innerHTML`, `outerHTML`, `eval`), runs a battery of **14 malicious OWASP XSS payloads** through note creation, and verifies safe DOM text rendering. |
-| [js/pwa.test.js](js/pwa.test.js) | **5** | Verifies `manifest.webmanifest` JSON validity, standalone display mode, presence of 192px/512px/maskable icons, binary PNG headers, Apple touch icons, Service Worker pre-cache manifests, and offline fallback routing. |
-| [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
-| **Total** | **28** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
+| **Total** | **57** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
 
 ---
 
@@ -546,7 +553,7 @@ pipOS/
 ├── manifest.webmanifest         # PWA Web App Manifest (standalone display, icons, theme colors)
 ├── sw.js                        # Offline-first Service Worker with cache revalidation & font fallbacks
 ├── css/
-│   └── style.css                # 17 organized sections: design tokens, .win component, animations, dock
+│   └── style.css                # 18 organized sections: design tokens, .win component, animations, dock, print
 ├── js/
 │   ├── util.js                  # DOM helpers ($ / $$), local storage wrappers, clamp, reduce-motion
 │   ├── audio.js                 # Web Audio synthesizer, pentatonic scale, impulse convolver, generative lullaby
@@ -556,11 +563,18 @@ pipOS/
 │   ├── wall.js                  # Wish wall backend adapter (Firebase/Supabase), rate limiting, sanitization
 │   ├── main.js                  # Lifecycle orchestration, theme engine, sound switch, clock, storybook
 │   ├── maths.js                 # Exported block-stacking collision and drop math for automated unit testing
+│   ├── a11y.test.js             # Node test suite for accessibility (skip links, SVG, inert states)
+│   ├── audio.test.js            # Node test suite for Web Audio synthesis, volume limits & melodies
+│   ├── i18n.test.js             # Node test suite for bilingual English/Hindi dictionary parity
 │   ├── maths.test.js            # Node test suite for block physics
-│   ├── wall.test.js             # Node test suite for rate limiting & remote payload parsing
-│   ├── xss.test.js              # Node test suite for CSP validation & 14 OWASP XSS payloads
+│   ├── og.test.js               # Node test suite for Open Graph tags & 1200x630 preview image
+│   ├── print.test.js            # Node test suite for print stylesheet and 1-page profile rules
 │   ├── pwa.test.js              # Node test suite for PWA manifest, service worker & icon validation
-│   └── og.test.js               # Node test suite for Open Graph tags & 1200x630 preview image
+│   ├── shortcuts.test.js        # Node test suite for keyboard shortcuts window and ? key modal
+│   ├── storybook.test.js        # Node test suite for storybook scenes and navigation
+│   ├── touch.test.js            # Node test suite for mobile touch targets & tap response
+│   ├── wall.test.js             # Node test suite for rate limiting & remote payload parsing
+│   └── xss.test.js              # Node test suite for CSP validation & 14 OWASP XSS payloads
 ├── assets/
 │   ├── og-preview.png           # 1200x630 social share preview banner (WhatsApp compliant < 300 KB)
 │   ├── favicon.svg              # Vector Pip icon for modern desktop & mobile browsers
