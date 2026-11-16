@@ -246,7 +246,8 @@ A rooftop delivery flight simulator driven by SVG path geometry.
 
 - **Scroll Synchronization:** Pip's cloud rider translates along a cubic Bézier delivery route (`M10 140C80 40...`) based on your scroll position within the window viewport.
 - **House Illumination:** Seven neighborhood houses (including *Boo-ton's attic*, *Mrs. Hoot's nest*, and *Fern the sleepy fox*) detect Pip's passing and illuminate their attic windows (`.is-lit`).
-- **Autopilot Demonstration:** Clicking *"Fly the route"* triggers a smooth 5.2-second autonomous ease-in-out flight with synchronized pentatonic chimes.
+- **Resident Stories & Tooltip Panel:** Once Pip passes a house, clicking, tapping, or pressing `Enter`/`Space` opens a small cozy tooltip/panel (`#houseStory`) revealing a 1-sentence micro-story (< 25 words) about the resident.
+- **Autopilot Demonstration:** Clicking *"Fly the route"* triggers a smooth 5.2-second autonomous ease-in-out flight with synchronized pentatonic chimes, unlocking all seven resident stories along the way.
 
 ---
 
@@ -456,20 +457,14 @@ node --test
 | [js/maths.test.js](js/maths.test.js) | **7** | Verifies block-stacking geometry, partial overlap calculations, miss thresholds ($< 3\text{px}$), and perfect drop detection ($< 5\text{px}$). |
 | [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
 | [js/pip-glance.test.js](js/pip-glance.test.js) | **4** | Verifies section scroll glance hook in `initNavSpy`, `look()` / `glance()` exports, reduced-motion bypass, and element coordinate targeting. |
-| [js/i18n.test.js](js/i18n.test.js) | **4** | English and Hindi translation dictionaries, 100% key parity, scene length ceilings ($< 150$ words), `data-i18n` attribute validation. |
-| [js/maths.test.js](js/maths.test.js) | **7** | Verifies block-stacking geometry, partial overlap calculations, miss thresholds ($< 3\text{px}$), and perfect drop detection ($< 5\text{px}$). |
-| [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
-| [js/print.test.js](js/print.test.js) | **4** | Verifies `@media print` rules, `@page` setup, hiding screen chrome and canvases, disabling animations, and black-on-white 1-page profile layout. |
 | [js/pwa.test.js](js/pwa.test.js) | **5** | Verifies `manifest.webmanifest` JSON validity, standalone display mode, presence of 192px/512px/maskable icons, binary PNG headers, Apple touch icons, Service Worker pre-cache manifests, and offline fallback routing. |
+| [js/route-story.test.js](js/route-story.test.js) | **6** | Verifies all 7 Dream Delivery houses have 1-sentence resident stories under 25 words, keyboard accessibility (tabindex, role, ARIA), #houseStory tooltip panel structure, and click/key handlers with passed check. |
 | [js/shortcuts.test.js](js/shortcuts.test.js) | **4** | Validates `#shortcuts` window structure, `keys.txt` listing of controls (1–8, arrows, Space, ?), typing input guards, and desktop rail shortcut. |
 | [js/storybook.test.js](js/storybook.test.js) | **4** | Verifies `storybook.exe` 6 illustrated scenes, touch swipe and keyboard navigation, responsive CSS layout, and reduced motion overrides. |
 | [js/touch.test.js](js/touch.test.js) | **4** | Verifies touch actions, elimination of mobile tap delay (`touch-action: manipulation`), WCAG 44×44px touch targets on taskbar, and FOIT prevention. |
 | [js/wall.test.js](js/wall.test.js) | **9** | Verifies control-character stripping, empty wish rejection, name truncation ($20$ chars), wish ceiling ($120$ chars), 15s cooldown timers, 10-minute rate limiting, and Firebase/Supabase payload parsing. |
-| [js/wish-manage.test.js](js/wish-manage.test.js) | **10** | Verifies plain text wish export (`pip-wishes.txt`), `localStorage` deletion under `pip:wall`, seed note protection, keyboard-accessible confirm dialog, Escape dismissal, and zero-reload DOM updates. |
 | [js/xss.test.js](js/xss.test.js) | **4** | Validates CSP meta tag syntax, audits source code for dangerous sinks (`innerHTML`, `outerHTML`, `eval`), runs a battery of **14 malicious OWASP XSS payloads** through note creation, and verifies safe DOM text rendering. |
-| **Total** | **71** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
-| [js/xss.test.js](js/xss.test.js) | **4** | Validates CSP meta tag syntax, audits source code for dangerous sinks (`innerHTML`, `outerHTML`, `eval`), runs a battery of **14 malicious OWASP XSS payloads** through note creation, and verifies safe DOM text rendering. |
-| **Total** | **57** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
+| **Total** | **67** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
 
 ---
 
@@ -585,17 +580,17 @@ pipOS/
 │   ├── maths.js                 # Exported block-stacking collision and drop math for automated unit testing
 │   ├── a11y.test.js             # Node test suite for accessibility (skip links, SVG, inert states)
 │   ├── audio.test.js            # Node test suite for Web Audio synthesis, volume limits & melodies
+│   ├── growth.test.js           # Node test suite for growth chart milestones & animation
 │   ├── i18n.test.js             # Node test suite for bilingual English/Hindi dictionary parity
 │   ├── maths.test.js            # Node test suite for block physics
 │   ├── og.test.js               # Node test suite for Open Graph tags & 1200x630 preview image
 │   ├── pip-glance.test.js       # Node test suite for section observer glance hook & look()
-│   ├── print.test.js            # Node test suite for print stylesheet and 1-page profile rules
 │   ├── pwa.test.js              # Node test suite for PWA manifest, service worker & icon validation
+│   ├── route-story.test.js      # Node test suite for Dream Delivery house stories & tooltips
 │   ├── shortcuts.test.js        # Node test suite for keyboard shortcuts window and ? key modal
 │   ├── storybook.test.js        # Node test suite for storybook scenes and navigation
 │   ├── touch.test.js            # Node test suite for mobile touch targets & tap response
 │   ├── wall.test.js             # Node test suite for rate limiting & remote payload parsing
-│   ├── wish-manage.test.js      # Node test suite for wish deletion, confirm step & text export
 │   └── xss.test.js              # Node test suite for CSP validation & 14 OWASP XSS payloads
 ├── assets/
 │   ├── og-preview.png           # 1200x630 social share preview banner (WhatsApp compliant < 300 KB)
