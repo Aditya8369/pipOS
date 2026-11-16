@@ -63,6 +63,29 @@
       paintContrast();
     });
   }
+    /* ---------- quiet mode ---------- */
+  function initQuiet() {
+    var html = document.documentElement, btn = $('#quietBtn');
+    var quiet = store.get('quiet', '') === 'on';
+    function apply() {
+      if (quiet) html.setAttribute('data-quiet', 'on');
+      else html.removeAttribute('data-quiet');
+      if (btn) {
+        btn.setAttribute('aria-pressed', quiet ? 'true' : 'false');
+        btn.setAttribute('aria-label', quiet ? 'Quiet mode on, turn it off' : 'Quiet mode off, turn it on');
+      }
+      if (quiet && audio.isOn()) audio.toggle();
+    }
+    apply();
+    audio.onChange(function () {
+      if (quiet && audio.isOn()) audio.toggle();
+    });
+    if (btn) btn.addEventListener('click', function () {
+      quiet = !quiet;
+      store.set('quiet', quiet ? 'on' : 'off');
+      apply();
+    });
+  }
   /* ---------- sound switch ---------- */
   function initSound() {
     var btn = $('#soundBtn'), label = $('#soundLabel');
@@ -182,7 +205,7 @@
   function initStory() {
     var track = $('#storyTrack');
     if (!track) return;
-    var book = $('#storybook'), scenes = $$('.scene', track), dots = $$('.story-dot', track);
+    var book = $('#storyPages'), scenes = $$('.scene', track), dots = $$('.story-dot', track);
     var prev = $('#storyPrev'), next = $('#storyNext'), count = $('#storyCount');
     var n = scenes.length, cur = -1, startX = 0, startY = 0;
     if (!book || !n) return;
@@ -317,6 +340,7 @@
   safe('pip', PIP.pip.init);
   safe('theme', initTheme);
   safe('sound', initSound);
+  safe('quiet', initQuiet);
   safe('clock', initClock);
   safe('foldable', initFoldable);
   safe('shortcuts', initShortcuts);
