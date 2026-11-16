@@ -158,8 +158,178 @@
      ===================================================================== */
   function initLights() {
     var room = $('#darkroom'), lanternsEl = $('#lanterns'), trayN = $('#trayN');
+    var roomsEl = $('#drRooms'), resetBtn = $('#drResetRoom');
     if (!room || !lanternsEl) return;
-    var items = $$('[data-item]', room);
+
+    var ROOMS = [
+      { id: 'nursery', name: 'Nursery', hint: 'Dark nursery. Move your pointer, drag the lantern, or use arrow keys to shine the light.' },
+      { id: 'attic', name: 'Attic', hint: 'Dusty attic. Move your pointer, drag the lantern, or use arrow keys to shine the light.' },
+      { id: 'garden', name: 'Garden', hint: 'Night garden. Move your pointer, drag the lantern, or use arrow keys to shine the light.' }
+    ];
+
+    var curRoom = store.get('dr_room', 'nursery');
+    if (curRoom !== 'nursery' && curRoom !== 'attic' && curRoom !== 'garden') {
+      curRoom = 'nursery';
+    }
+
+    var foundByRoom = { nursery: [], attic: [], garden: [] };
+    try {
+      var rawFound = store.get('dr_found', '');
+      if (rawFound) {
+        var parsed = JSON.parse(rawFound);
+        if (parsed && typeof parsed === 'object') {
+          ['nursery', 'attic', 'garden'].forEach(function (k) {
+            if (Array.isArray(parsed[k])) foundByRoom[k] = parsed[k];
+          });
+        }
+      }
+    } catch (e) {}
+
+    // Fallbacks for individual room store keys if dr_found was empty
+    ['nursery', 'attic', 'garden'].forEach(function (k) {
+      if (!foundByRoom[k].length) {
+        var ind = store.get('dr_found_' + k, '');
+        if (ind) {
+          try {
+            var arr = JSON.parse(ind);
+            if (Array.isArray(arr)) foundByRoom[k] = arr;
+          } catch (e) {}
+        }
+      }
+    });
+
+    function saveProgress() {
+      store.set('dr_found', JSON.stringify(foundByRoom));
+      var counts = {
+        nursery: foundByRoom.nursery.length,
+        attic: foundByRoom.attic.length,
+        garden: foundByRoom.garden.length
+      };
+      var total = counts.nursery + counts.attic + counts.garden;
+      store.set('dr_counts', JSON.stringify(counts));
+      store.set('dr_count_nursery', counts.nursery);
+      store.set('dr_count_attic', counts.attic);
+      store.set('dr_count_garden', counts.garden);
+      store.set('dr_total_found', total);
+      store.set('dr_room', curRoom);
+      store.set('nightlight_found', total);
+      store.set('nightlight_counts', JSON.stringify(counts));
+    }
+
+    function syncRoomElements() {
+      ['nursery', 'attic', 'garden'].forEach(function (rk) {
+        var rEl = $('.dr-room[data-room="' + rk + '"]', room);
+        if (!rEl) return;
+        var rItems = $$('[data-item]', rEl);
+        var foundList = foundByRoom[rk] || [];
+        rItems.forEach(function (it) {
+          var name = it.getAttribute('data-name');
+          if (name && foundList.indexOf(name) !== -1) {
+            it.classList.add('is-found');
+          } else {
+            it.classList.remove('is-found');
+          }
+        });
+        var badge = $('#roomCount' + rk.charAt(0).toUpperCase() + rk.slice(1));
+        if (badge) {
+          badge.textContent = foundList.length + '/' + rItems.length;
+        }
+      });
+    }
+
+    function updateRoomView() {
+      room.setAttribute('data-current-room', curRoom);
+      var roomConf = ROOMS.filter(function (r) { return r.id === curRoom; })[0] || ROOMS[0];
+      room.setAttribute('aria-label', roomConf.hint);
+
+      if (roomsEl) {
+        var roomBtns = $$('.dr-room-btn', roomsEl);
+        roomBtns.forEach(function (btn) {
+          var rk = btn.getAttribute('data-room');
+          var isActive = (rk === curRoom);
+          btn.classList.toggle('is-active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          btn.tabIndex = isActive ? 0 : -1;
+        });
+      }
+
+      var roomSections = $$('.dr-room', room);
+      roomSections.forEach(function (sec) {
+        var rk = sec.getAttribute('data-room');
+        var isActive = (rk === curRoom);
+        sec.classList.toggle('is-active', isActive);
+        if (isActive) {
+          sec.removeAttribute('hidden');
+        } else {
+          sec.setAttribute('hidden', '');
+        }
+      });
+
+      var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+      var activeItems = activeEl ? $$('[data-item]', activeEl) : [];
+      var curFound = (foundByRoom[curRoom] || []).length;
+      var total = activeItems.length || 5;
+
+      if (trayN) {
+        trayN.textContent = curFound + ' of ' + total + ' dreams found';
+      }
+      room.classList.toggle('is-done', curFound >= total && total > 0);
+    }
+
+    function setRoom(rk) {
+      if (rk !== 'nursery' && rk !== 'attic' && rk !== 'garden') return;
+      curRoom = rk;
+      store.set('dr_room', curRoom);
+      updateRoomView();
+    }
+
+    if (roomsEl) {
+      var roomBtns = $$('.dr-room-btn', roomsEl);
+      roomBtns.forEach(function (btn, idx) {
+        btn.addEventListener('click', function () {
+          var rk = btn.getAttribute('data-room');
+          setRoom(rk);
+          btn.focus();
+        });
+        btn.addEventListener('keydown', function (e) {
+          var d = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1
+                : (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ? -1 : 0;
+          if (d !== 0) {
+            e.preventDefault();
+            var nextIdx = (idx + d + roomBtns.length) % roomBtns.length;
+            var nextBtn = roomBtns[nextIdx];
+            var nextRk = nextBtn.getAttribute('data-room');
+            setRoom(nextRk);
+            nextBtn.focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            setRoom(roomBtns[0].getAttribute('data-room'));
+            roomBtns[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            setRoom(roomBtns[roomBtns.length - 1].getAttribute('data-room'));
+            roomBtns[roomBtns.length - 1].focus();
+          }
+        });
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        foundByRoom[curRoom] = [];
+        var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+        if (activeEl) {
+          $$('[data-item]', activeEl).forEach(function (it) {
+            it.classList.remove('is-found');
+          });
+        }
+        saveProgress();
+        syncRoomElements();
+        updateRoomView();
+        var curName = curRoom.charAt(0).toUpperCase() + curRoom.slice(1);
+        toast('Dreams hidden again in the ' + curName + '.');
+      });
+    }
 
     var LANTERNS = [
       { name: 'Moon', glow: '#cfe3ff', r: 92 },
@@ -167,7 +337,7 @@
       { name: 'Rose', glow: '#ff9fc0', r: 80 },
       { name: 'Mint', glow: '#9ff0d0', r: 100 }
     ];
-    var cur = 0, x = 0, y = 0, r = LANTERNS[0].r, found = 0;
+    var cur = 0, x = 0, y = 0, r = LANTERNS[0].r;
     var lastMove = 0, visible = false;
 
     function paint() {
@@ -314,18 +484,34 @@
     // a dream is found when the lit circle covers it and you click, tap or press Enter
     function tryFind() {
       var rb = room.getBoundingClientRect();
-      items.forEach(function (it) {
+      var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+      if (!activeEl) return;
+      var activeItems = $$('[data-item]', activeEl);
+
+      activeItems.forEach(function (it) {
         if (it.classList.contains('is-found')) return;
         var ib = it.getBoundingClientRect();
         var ix = ib.left + ib.width / 2 - rb.left, iy = ib.top + ib.height / 2 - rb.top;
         if (Math.hypot(ix - x, iy - y) < Math.max(34, r * 0.55)) {
           it.classList.add('is-found');
-          found += 1;
-          var itName = it.getAttribute('data-name');
-          trayN.textContent = found + ' of ' + items.length + ' dreams found' + (itName ? ' (' + itName + ')' : '');
-          if (audio.isOn()) audio.note(audio.SCALE[Math.min(found + 2, 7)], { dur: 1.2, gain: 0.18 });
-          if (found === items.length) {
-            toast('All five dreams found. Pip is very proud.');
+          var itName = it.getAttribute('data-name') || it.getAttribute('data-item') || 'dream';
+          if (foundByRoom[curRoom].indexOf(itName) === -1) {
+            foundByRoom[curRoom].push(itName);
+          }
+          var curCount = foundByRoom[curRoom].length;
+          var totalInRoom = activeItems.length || 5;
+
+          saveProgress();
+          syncRoomElements();
+
+          if (trayN) {
+            trayN.textContent = curCount + ' of ' + totalInRoom + ' dreams found' + (itName ? ' (' + itName + ')' : '');
+          }
+          if (audio.isOn()) audio.note(audio.SCALE[Math.min(curCount + 2, 7)], { dur: 1.2, gain: 0.18 });
+
+          if (curCount === totalInRoom) {
+            var curName = curRoom.charAt(0).toUpperCase() + curRoom.slice(1);
+            toast('All five dreams found in the ' + curName + '! Pip is very proud.');
             room.classList.add('is-done');
             if (audio.isOn()) audio.giggle();
             if (PIP.stickers) PIP.stickers.unlock('dreams5');
@@ -353,6 +539,8 @@
     });
 
     window.addEventListener('resize', function () { if (performance.now() - lastMove > 2500) { center(); paint(); } });
+    syncRoomElements();
+    updateRoomView();
     setLantern(0);
     center();
     paint();
@@ -525,6 +713,17 @@
       visible = v;
       if (v && !raf) { last = performance.now(); loop(); }
     });
+
+    function updateDpr() {
+      var nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (nextDpr !== dpr) {
+        dpr = nextDpr;
+        cv.width = W * dpr;
+        cv.height = H * dpr;
+        draw();
+      }
+    }
+    window.addEventListener('resize', updateDpr);
 
     reset();
     draw();

@@ -253,11 +253,8 @@
     if (prev) prev.addEventListener('click', function () { move(-1); });
     if (next) next.addEventListener('click', function () { move(1); });
     dots.forEach(function (d, i) {
-      d.addEventListener('click', function () { setScene(i); });
       d.addEventListener('click', function () {
-        var top = track.getBoundingClientRect().top + window.pageYOffset - stickyTop();
-        var y = top + ((i + 0.5) / n) * range();
-        window.scrollTo({ top: y, behavior: reduce.matches ? 'auto' : 'smooth' });
+        setScene(i);
         if (scenes[i] && scenes[i].focus) scenes[i].focus({ preventScroll: true });
       });
       d.addEventListener('keydown', function (e) {
@@ -278,10 +275,12 @@
       if (e.key === 'End') { e.preventDefault(); setScene(n - 1); }
     });
     book.addEventListener('touchstart', function (e) {
+      if (!e.changedTouches || !e.changedTouches[0]) return;
       var touch = e.changedTouches[0];
       startX = touch.clientX; startY = touch.clientY;
     }, { passive: true });
     book.addEventListener('touchend', function (e) {
+      if (!e.changedTouches || !e.changedTouches[0]) return;
       var touch = e.changedTouches[0], dx = touch.clientX - startX, dy = touch.clientY - startY;
       if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
       move(dx < 0 ? 1 : -1);

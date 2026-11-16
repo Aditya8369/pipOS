@@ -312,17 +312,56 @@
           <div class="win-body">
             <div class="proj-head">
               <div class="thumb" hidden><img loading="lazy" decoding="async" data-optional data-src="assets/pip_dream_lantern.png" alt="" width="84" height="84"></div>
-              <p>Pick a lantern, then sweep it across the dark nursery. Five small dreams are hiding in there.</p>
+              <p>Pick a lantern and explore three rooms across the nursery, attic, and garden. Five dreams hide in each space.</p>
             </div>
-            <div class="darkroom" id="darkroom" tabindex="0" aria-label="Dark nursery. Move your pointer, drag the lantern, or use arrow keys to shine the light.">
+            <div class="dr-rooms" id="drRooms" role="tablist" aria-label="Choose a room to explore">
+              <button type="button" class="dr-room-btn is-active" role="tab" aria-selected="true" aria-controls="drHidden" data-room="nursery" id="roomBtnNursery">
+                <span class="dr-room-name">Nursery</span>
+                <span class="dr-room-badge" id="roomCountNursery">0/5</span>
+              </button>
+              <button type="button" class="dr-room-btn" role="tab" aria-selected="false" aria-controls="drHidden" data-room="attic" id="roomBtnAttic">
+                <span class="dr-room-name">Attic</span>
+                <span class="dr-room-badge" id="roomCountAttic">0/5</span>
+              </button>
+              <button type="button" class="dr-room-btn" role="tab" aria-selected="false" aria-controls="drHidden" data-room="garden" id="roomBtnGarden">
+                <span class="dr-room-name">Garden</span>
+                <span class="dr-room-badge" id="roomCountGarden">0/5</span>
+              </button>
+            </div>
+            <div class="darkroom" id="darkroom" tabindex="0" data-current-room="nursery" aria-label="Dark nursery. Move your pointer, drag the lantern, or use arrow keys to shine the light.">
               <div class="dr-hidden" id="drHidden" aria-hidden="true">
-                <svg class="dr-item" data-item data-name="starlight wisp" viewBox="-10 -10 20 20" style="left:12%;top:24%"><use href="#star"/></svg>
-                <svg class="dr-item" data-item data-name="moon honey" viewBox="-10 -10 20 20" style="left:78%;top:18%"><use href="#star"/></svg>
-                <svg class="dr-item" data-item data-name="warm soup dream" viewBox="-10 -10 20 20" style="left:46%;top:70%"><use href="#star"/></svg>
-                <svg class="dr-item" data-item data-name="cloud pillow" viewBox="-10 -10 20 20" style="left:88%;top:74%"><use href="#star"/></svg>
-                <svg class="dr-item" data-item data-name="spare sock" viewBox="-10 -10 20 20" style="left:26%;top:80%"><use href="#star"/></svg>
-                <span class="dr-psst">psst... the lantern remembers every dream</span>
-                <span class="dr-moon"></span>
+                <!-- Room 1: Nursery -->
+                <div class="dr-room is-active" data-room="nursery" id="drRoomNursery">
+                  <svg class="dr-item" data-item data-name="starlight wisp" viewBox="-10 -10 20 20" style="left:12%;top:24%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="moon honey" viewBox="-10 -10 20 20" style="left:78%;top:18%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="warm soup dream" viewBox="-10 -10 20 20" style="left:46%;top:70%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="cloud pillow" viewBox="-10 -10 20 20" style="left:88%;top:74%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="spare sock" viewBox="-10 -10 20 20" style="left:26%;top:80%"><use href="#star"/></svg>
+                  <span class="dr-psst">psst... the lantern remembers every dream</span>
+                  <span class="dr-moon"></span>
+                </div>
+
+                <!-- Room 2: Attic -->
+                <div class="dr-room" data-room="attic" id="drRoomAttic" hidden>
+                  <svg class="dr-item" data-item data-name="forgotten music box" viewBox="-10 -10 20 20" style="left:18%;top:32%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="dusty constellation globe" viewBox="-10 -10 20 20" style="left:82%;top:26%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="creaky floorboard star" viewBox="-10 -10 20 20" style="left:52%;top:82%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="moth-eaten lullaby book" viewBox="-10 -10 20 20" style="left:14%;top:74%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="brass pocket watch" viewBox="-10 -10 20 20" style="left:72%;top:68%"><use href="#star"/></svg>
+                  <span class="dr-psst">psst... the rafters hold old secrets</span>
+                  <span class="dr-attic-window"></span>
+                </div>
+
+                <!-- Room 3: Garden -->
+                <div class="dr-room" data-room="garden" id="drRoomGarden" hidden>
+                  <svg class="dr-item" data-item data-name="dewdrop pearl" viewBox="-10 -10 20 20" style="left:22%;top:22%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="glowing night-lily" viewBox="-10 -10 20 20" style="left:84%;top:36%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="mossy pebble" viewBox="-10 -10 20 20" style="left:38%;top:76%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="sleeping firefly" viewBox="-10 -10 20 20" style="left:64%;top:22%"><use href="#star"/></svg>
+                  <svg class="dr-item" data-item data-name="snail's silver trail" viewBox="-10 -10 20 20" style="left:76%;top:78%"><use href="#star"/></svg>
+                  <span class="dr-psst">psst... the night garden whispers in bloom</span>
+                  <span class="dr-firefly-glow"></span>
+                </div>
               </div>
               <div class="dr-glow" aria-hidden="true"></div>
               <div class="dr-handle" id="drHandle" aria-label="Lantern handle. Drag to sweep the light." role="button" tabindex="-1">
@@ -335,9 +374,12 @@
                 <span class="dr-handle-text" aria-hidden="true">Drag</span>
               </div>
             </div>
-            <div class="row row-between">
+            <div class="row row-between dr-footer">
               <div class="lanterns" id="lanterns" role="radiogroup" aria-label="Choose a lantern"></div>
-              <p class="tray" id="tray" aria-live="polite" aria-atomic="true"><span class="tray-n" id="trayN">0 of 5 dreams found</span></p>
+              <div class="dr-status-group">
+                <p class="tray" id="tray" aria-live="polite" aria-atomic="true"><span class="tray-n" id="trayN">0 of 5 dreams found</span></p>
+                <button type="button" class="btn dr-reset-room-btn" id="drResetRoom" aria-label="Hide dreams again in this room" title="Hide dreams in current room">Reset room</button>
+              </div>
             </div>
           </div>
         </article>
@@ -860,6 +902,9 @@
               </div>
               <p class="err" id="gbError" role="alert" aria-live="assertive"></p>
             </form>
+            <div class="wall-actions">
+              <button id="gbExport" class="btn btn-tool" type="button" aria-label="Export wishes as text file">Export wishes (.txt)</button>
+            </div>
             <ul class="notes" id="gbList"></ul>
             <p class="fine" id="gbFine">Wishes are saved on this device only.</p>
           </div>
