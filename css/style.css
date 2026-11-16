@@ -475,22 +475,87 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
 .vol-val { font-size: 0.85rem; font-weight: 600; min-width: 32px; color: var(--ink); }
 
 /* --- 10.2 Nightlight Collection (Darkroom) --- */
+.dr-rooms {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.dr-room-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--paper);
+  border: 2.5px solid var(--line);
+  border-radius: 999px;
+  font: 600 0.85rem var(--f-ui);
+  color: var(--ink);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--shadow);
+  touch-action: manipulation;
+  transition: transform 0.1s, background 0.15s, box-shadow 0.15s;
+}
+.dr-room-btn:hover {
+  transform: translateY(-1px);
+}
+.dr-room-btn.is-active {
+  background: var(--butter);
+  box-shadow: 0 0 0 1px var(--line), 2px 2px 0 var(--shadow);
+}
+[data-theme="night"] .dr-room-btn.is-active {
+  background: var(--berry);
+  color: #fff;
+}
+.dr-room-badge {
+  font-size: 0.74rem;
+  opacity: 0.85;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+[data-theme="night"] .dr-room-badge {
+  background: rgba(255, 255, 255, 0.15);
+}
 .darkroom {
   --x: 50%; --y: 50%; --r: 92px; --glow: #cfe3ff;
   position: relative; aspect-ratio: 16 / 10; min-height: 190px;
   background: #120d24; border: 3px solid var(--line); border-radius: 12px; overflow: hidden;
   touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: background 0.3s ease;
 }
+.darkroom[data-current-room="attic"] { background: #1c131d; }
+.darkroom[data-current-room="garden"] { background: #0c1813; }
+.darkroom[data-current-room="nursery"] { background: #120d24; }
 @media (pointer: fine) { .darkroom { cursor: none; } }
 .dr-hidden {
   position: absolute; inset: 0;
   -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
   mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
 }
+.dr-room {
+  position: absolute; inset: 0;
+}
+.dr-room[hidden] {
+  display: none !important;
+}
 .dr-item { position: absolute; width: 28px; height: 28px; transform: translate(-50%, -50%); fill: #ffe9ae; }
 .dr-item.is-found { fill: #fff; filter: drop-shadow(0 0 7px #ffd27a); animation: twinkle 1.4s ease-in-out infinite alternate; }
 .dr-psst { position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%); width: 90%; text-align: center; font: italic 600 clamp(0.72rem, 2.4vw, 1rem) var(--f-head); color: #ffe9ae; }
 .dr-moon { position: absolute; right: 26%; top: 12%; width: 42px; height: 42px; border-radius: 50%; box-shadow: inset -13px -4px 0 0 #ffe9ae; }
+.dr-attic-window {
+  position: absolute; right: 22%; top: 10%; width: 38px; height: 48px;
+  border: 2px solid rgba(255, 233, 174, 0.5); border-radius: 19px 19px 0 0;
+  box-shadow: inset 0 0 12px rgba(255, 200, 102, 0.25);
+}
+.dr-attic-window::after {
+  content: ""; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(255, 233, 174, 0.3) 15px, rgba(255, 233, 174, 0.3) 17px);
+}
+.dr-firefly-glow {
+  position: absolute; right: 24%; top: 16%; width: 50px; height: 50px;
+  border-radius: 50%; background: radial-gradient(circle, rgba(159, 240, 208, 0.45) 0%, transparent 70%);
+}
 .dr-glow { position: absolute; inset: 0; pointer-events: none; opacity: 0.55; mix-blend-mode: screen; background: radial-gradient(circle var(--r) at var(--x) var(--y), var(--glow) 0%, transparent 100%); }
 .darkroom.is-done .dr-glow { opacity: 0.6; }
 .dr-handle {
@@ -542,6 +607,16 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
     pointer-events: none;
   }
 }
+.dr-footer { align-items: center; gap: 10px; margin-top: 10px; }
+.dr-status-group { display: flex; align-items: center; gap: 10px; }
+.dr-reset-room-btn {
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  min-height: 32px;
+  border-radius: 999px;
+  opacity: 0.85;
+}
+.dr-reset-room-btn:hover { opacity: 1; }
 .lanterns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 .lantern {
   display: inline-flex; align-items: center; gap: 0.4rem; min-height: 44px; padding: 0.2rem 0.8rem 0.2rem 0.4rem;
