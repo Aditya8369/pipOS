@@ -169,11 +169,17 @@ Theme switching is implemented via CSS Custom Properties toggled by the `data-th
 | `15` | `KEYFRAME ANIMATIONS` | `bob`, `wave`, `wiggle`, `zzz`, `twinkle`, `marq`, `spark`, `ring` |
 | `16` | `RESPONSIVE BREAKPOINTS` | Media queries (`1360px`, `960px`, `860px`, `760px`, `720px`, `380px`), bottom dock reflow |
 | `17` | `REDUCED MOTION` | `@media (prefers-reduced-motion: reduce)` overrides for vestibular accessibility |
+| `18` | `PRINT STYLESHEET` | `@media print` rules for clean one-page Pip profile (A4 & Letter) |
 
 ---
 
 ## 5. Responsive Behavior & Accessibility
 
+- **Print Stylesheet (`@media print`)**:
+  - Engineered to generate a clean, one-page character sheet and project list.
+  - Hides screen chrome (taskbar, desktop shortcuts rail, marquee, canvases, buttons, darkroom, story track, wish wall).
+  - Enforces high-contrast black-on-white printing with ink-efficient borders and zero box shadows.
+  - Sized and paginated (`@page { size: auto; margin: 8mm 12mm; }`) to strictly fit one page on both A4 and US Letter paper sizes.
 - **Mobile Dock (`≤ 720px`)**:
   - The taskbar shifts from the top of the screen to the bottom (`inset: auto 0 0 0`), mimicking a smartphone bottom navigation bar.
   - Safe area insets (`env(safe-area-inset-bottom)`) ensure thumb-friendly reachability above native home indicators.

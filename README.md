@@ -456,6 +456,10 @@ node --test
 | [js/maths.test.js](js/maths.test.js) | **7** | Verifies block-stacking geometry, partial overlap calculations, miss thresholds ($< 3\text{px}$), and perfect drop detection ($< 5\text{px}$). |
 | [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
 | [js/pip-glance.test.js](js/pip-glance.test.js) | **4** | Verifies section scroll glance hook in `initNavSpy`, `look()` / `glance()` exports, reduced-motion bypass, and element coordinate targeting. |
+| [js/i18n.test.js](js/i18n.test.js) | **4** | English and Hindi translation dictionaries, 100% key parity, scene length ceilings ($< 150$ words), `data-i18n` attribute validation. |
+| [js/maths.test.js](js/maths.test.js) | **7** | Verifies block-stacking geometry, partial overlap calculations, miss thresholds ($< 3\text{px}$), and perfect drop detection ($< 5\text{px}$). |
+| [js/og.test.js](js/og.test.js) | **3** | Verifies complete Open Graph and Twitter Card tags, validates `assets/og-preview.png` dimensions ($1200 \times 630$), verifies file size is strictly under the 300 KB WhatsApp limit (~181 KB), and audits social debugger compatibility. |
+| [js/print.test.js](js/print.test.js) | **4** | Verifies `@media print` rules, `@page` setup, hiding screen chrome and canvases, disabling animations, and black-on-white 1-page profile layout. |
 | [js/pwa.test.js](js/pwa.test.js) | **5** | Verifies `manifest.webmanifest` JSON validity, standalone display mode, presence of 192px/512px/maskable icons, binary PNG headers, Apple touch icons, Service Worker pre-cache manifests, and offline fallback routing. |
 | [js/shortcuts.test.js](js/shortcuts.test.js) | **4** | Validates `#shortcuts` window structure, `keys.txt` listing of controls (1–8, arrows, Space, ?), typing input guards, and desktop rail shortcut. |
 | [js/storybook.test.js](js/storybook.test.js) | **4** | Verifies `storybook.exe` 6 illustrated scenes, touch swipe and keyboard navigation, responsive CSS layout, and reduced motion overrides. |
@@ -464,6 +468,8 @@ node --test
 | [js/wish-manage.test.js](js/wish-manage.test.js) | **10** | Verifies plain text wish export (`pip-wishes.txt`), `localStorage` deletion under `pip:wall`, seed note protection, keyboard-accessible confirm dialog, Escape dismissal, and zero-reload DOM updates. |
 | [js/xss.test.js](js/xss.test.js) | **4** | Validates CSP meta tag syntax, audits source code for dangerous sinks (`innerHTML`, `outerHTML`, `eval`), runs a battery of **14 malicious OWASP XSS payloads** through note creation, and verifies safe DOM text rendering. |
 | **Total** | **71** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
+| [js/xss.test.js](js/xss.test.js) | **4** | Validates CSP meta tag syntax, audits source code for dangerous sinks (`innerHTML`, `outerHTML`, `eval`), runs a battery of **14 malicious OWASP XSS payloads** through note creation, and verifies safe DOM text rendering. |
+| **Total** | **57** | **100% Passing (0 failures, 0 skipped, 0 flakiness)** |
 
 ---
 
@@ -562,7 +568,7 @@ pipOS/
 ├── manifest.webmanifest         # PWA Web App Manifest (standalone display, icons, theme colors)
 ├── sw.js                        # Offline-first Service Worker with cache revalidation & font fallbacks
 ├── css/
-│   └── style.css                # 17 organized sections: design tokens, .win component, animations, dock
+│   └── style.css                # 18 organized sections: design tokens, .win component, animations, dock, print
 ├── js/
 │   ├── util.js                  # DOM helpers ($ / $$), local storage wrappers, clamp, reduce-motion
 │   ├── audio.js                 # Web Audio synthesizer, pentatonic scale, impulse convolver, generative lullaby
@@ -577,9 +583,13 @@ pipOS/
 │   ├── growth.test.js           # Node test suite for growth chart milestones & animation
 │   ├── i18n.test.js             # Node test suite for bilingual English/Hindi dictionary parity
 │   ├── maths.js                 # Exported block-stacking collision and drop math for automated unit testing
+│   ├── a11y.test.js             # Node test suite for accessibility (skip links, SVG, inert states)
+│   ├── audio.test.js            # Node test suite for Web Audio synthesis, volume limits & melodies
+│   ├── i18n.test.js             # Node test suite for bilingual English/Hindi dictionary parity
 │   ├── maths.test.js            # Node test suite for block physics
 │   ├── og.test.js               # Node test suite for Open Graph tags & 1200x630 preview image
 │   ├── pip-glance.test.js       # Node test suite for section observer glance hook & look()
+│   ├── print.test.js            # Node test suite for print stylesheet and 1-page profile rules
 │   ├── pwa.test.js              # Node test suite for PWA manifest, service worker & icon validation
 │   ├── shortcuts.test.js        # Node test suite for keyboard shortcuts window and ? key modal
 │   ├── storybook.test.js        # Node test suite for storybook scenes and navigation
