@@ -486,6 +486,8 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
   position: absolute; inset: 0;
   -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
   mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), #000 0%, rgba(0, 0, 0, 0.9) 45%, transparent 100%);
+  will-change: mask-image, -webkit-mask-image;
+  transform: translateZ(0);
 }
 .dr-item { position: absolute; width: 28px; height: 28px; transform: translate(-50%, -50%); fill: #ffe9ae; }
 .dr-item.is-found { fill: #fff; filter: drop-shadow(0 0 7px #ffd27a); animation: twinkle 1.4s ease-in-out infinite alternate; }

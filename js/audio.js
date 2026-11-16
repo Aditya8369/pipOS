@@ -69,7 +69,8 @@
     opts = opts || {};
     var dur = opts.dur || 1.4, gain = opts.gain || 0.22, when = opts.when || 0;
     var type = opts.type || 'sine', bell = opts.bell !== false;
-    var t = ctx.currentTime + when;
+    var now = ctx.currentTime;
+    var t = Math.max(now, now + (when || 0));
 
     var g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
