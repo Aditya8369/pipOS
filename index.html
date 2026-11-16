@@ -415,32 +415,41 @@
           <div class="win-bar"><h3 class="win-title" id="routeTitle">dream-delivery.exe</h3></div>
           <div class="win-body">
             <p>Scroll to fly Pip across the rooftops, or press the button and watch.</p>
-            <svg id="routeSvg" class="route-svg" viewBox="0 0 600 290" role="img" aria-label="A map of seven rooftops with a dashed flight route and Pip flying along it on a cloud.">
-              <rect class="r-sky" width="600" height="290" rx="10"/>
-              <circle class="r-moon" cx="520" cy="48" r="22"/>
-              <use class="r-star" href="#star" x="60" y="30" width="12" height="12"/>
-              <use class="r-star" href="#star" x="160" y="58" width="9" height="9"/>
-              <use class="r-star" href="#star" x="300" y="26" width="11" height="11"/>
-              <use class="r-star" href="#star" x="430" y="70" width="9" height="9"/>
-              <path id="routePath" class="r-route" d="M10 140C80 40 150 40 230 110S360 170 420 100S540 40 590 120" fill="none"/>
-              <rect class="r-ground" y="262" width="600" height="28"/>
-              <g class="house" data-x="55" data-name="Boo-ton's attic" transform="translate(30 218)"><rect class="h-body" width="50" height="46" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
-              <g class="house" data-x="140" data-name="The Mittens twins" transform="translate(115 224)"><rect class="h-body" width="50" height="40" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
-              <g class="house" data-x="225" data-name="Mrs. Hoot's nest" transform="translate(200 212)"><rect class="h-body" width="50" height="52" rx="4"/><path class="h-roof" d="M-6 2L25-24 56 2Z"/><rect class="h-win" x="17" y="16" width="16" height="20" rx="3"/></g>
-              <g class="house" data-x="310" data-name="Little Wisp's crib" transform="translate(285 226)"><rect class="h-body" width="50" height="38" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
-              <g class="house" data-x="395" data-name="Fern the sleepy fox" transform="translate(370 214)"><rect class="h-body" width="50" height="50" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
-              <g class="house" data-x="480" data-name="The puddle pond" transform="translate(455 222)"><rect class="h-body" width="50" height="42" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
-              <g class="house" data-x="555" data-name="Moth Lamp Lane" transform="translate(530 216)"><rect class="h-body" width="50" height="48" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
-              <g id="rider" transform="translate(10 140)">
-                <g transform="translate(0 -14)">
-                  <ellipse class="rd-cloud" cx="0" cy="14" rx="26" ry="10"/>
-                  <circle class="rd-cloud" cx="-12" cy="10" r="9"/><circle class="rd-cloud" cx="10" cy="8" r="11"/>
-                  <circle class="rd-skull" cx="0" cy="-2" r="12"/>
-                  <circle class="rd-eye" cx="-4.5" cy="-2" r="3"/><circle class="rd-eye" cx="4.5" cy="-2" r="3"/>
-                  <path class="rd-cap" d="M-12-6C-10-18 4-22 14-18-8-16-10-10-12-6Z"/>
+            <div class="route-stage">
+              <svg id="routeSvg" class="route-svg" viewBox="0 0 600 290" role="img" aria-label="A map of seven rooftops with a dashed flight route and Pip flying along it on a cloud.">
+                <rect class="r-sky" width="600" height="290" rx="10"/>
+                <circle class="r-moon" cx="520" cy="48" r="22"/>
+                <use class="r-star" href="#star" x="60" y="30" width="12" height="12"/>
+                <use class="r-star" href="#star" x="160" y="58" width="9" height="9"/>
+                <use class="r-star" href="#star" x="300" y="26" width="11" height="11"/>
+                <use class="r-star" href="#star" x="430" y="70" width="9" height="9"/>
+                <path id="routePath" class="r-route" d="M10 140C80 40 150 40 230 110S360 170 420 100S540 40 590 120" fill="none"/>
+                <rect class="r-ground" y="262" width="600" height="28"/>
+                <g class="house" data-x="55" data-name="Boo-ton's attic" data-story="Boo-ton fell fast asleep hugging his favourite wooden button after Pip tucked him in." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Boo-ton's attic" transform="translate(30 218)"><rect class="h-body" width="50" height="46" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
+                <g class="house" data-x="140" data-name="The Mittens twins" data-story="The twins curled together under a patch quilt dreaming of chasing yarn across the clouds." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="The Mittens twins" transform="translate(115 224)"><rect class="h-body" width="50" height="40" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
+                <g class="house" data-x="225" data-name="Mrs. Hoot's nest" data-story="Mother Hoot turned down her twig lamp and closed her eyes to gentle night breezes." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Mrs. Hoot's nest" transform="translate(200 212)"><rect class="h-body" width="50" height="52" rx="4"/><path class="h-roof" d="M-6 2L25-24 56 2Z"/><rect class="h-win" x="17" y="16" width="16" height="20" rx="3"/></g>
+                <g class="house" data-x="310" data-name="Little Wisp's crib" data-story="Little Wisp drifted into a warm dream of golden stars and lavender soup." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Little Wisp's crib" transform="translate(285 226)"><rect class="h-body" width="50" height="38" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
+                <g class="house" data-x="395" data-name="Fern the sleepy fox" data-story="Fern curled his bushy tail around his nose and dozed off under pine branches." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Fern the sleepy fox" transform="translate(370 214)"><rect class="h-body" width="50" height="50" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
+                <g class="house" data-x="480" data-name="The puddle pond" data-story="Three little frogs rested on lily pads humming quiet water lullabies until morning." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="The puddle pond" transform="translate(455 222)"><rect class="h-body" width="50" height="42" rx="4"/><path class="h-roof" d="M-6 2L25-18 56 2Z"/><rect class="h-win" x="17" y="12" width="16" height="16" rx="3"/></g>
+                <g class="house" data-x="555" data-name="Moth Lamp Lane" data-story="The velvet moths settled around the glowing lantern enjoying peaceful, warm dreams." tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Moth Lamp Lane" transform="translate(530 216)"><rect class="h-body" width="50" height="48" rx="4"/><path class="h-roof" d="M-6 2L25-22 56 2Z"/><rect class="h-win" x="17" y="14" width="16" height="18" rx="3"/></g>
+                <g id="rider" transform="translate(10 140)">
+                  <g transform="translate(0 -14)">
+                    <ellipse class="rd-cloud" cx="0" cy="14" rx="26" ry="10"/>
+                    <circle class="rd-cloud" cx="-12" cy="10" r="9"/><circle class="rd-cloud" cx="10" cy="8" r="11"/>
+                    <circle class="rd-skull" cx="0" cy="-2" r="12"/>
+                    <circle class="rd-eye" cx="-4.5" cy="-2" r="3"/><circle class="rd-eye" cx="4.5" cy="-2" r="3"/>
+                    <path class="rd-cap" d="M-12-6C-10-18 4-22 14-18-8-16-10-10-12-6Z"/>
+                  </g>
                 </g>
-              </g>
-            </svg>
+              </svg>
+              <div id="houseStory" class="house-story house-tooltip" role="region" aria-live="polite" hidden>
+                <div class="house-story-head">
+                  <h4 id="houseStoryTitle" class="house-story-title"></h4>
+                  <button type="button" id="houseStoryClose" class="house-story-close" aria-label="Close story">×</button>
+                </div>
+                <p id="houseStoryText" class="house-story-text"></p>
+              </div>
+            </div>
             <div class="row row-between">
               <button class="btn btn-primary" id="flyBtn" type="button" aria-controls="routeSvg routeLabel">Fly the route</button>
               <p class="score" id="routeLabel" aria-live="polite" aria-atomic="true">Waiting at the nursery window</p>
