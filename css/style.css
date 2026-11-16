@@ -245,6 +245,8 @@ code { font-size: 0.9em; background: var(--blush); padding: 0.05rem 0.3rem; bord
 .ic-pin::after { border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
 .ic-key { background: var(--butter); }
 .ic-key::after { border-radius: 2px; }
+.ic-star { background: var(--butter); }
+.ic-star::after { border-radius: 50%; border-style: dotted; }
 .ic-trash { background: var(--paper); }
 .ic-trash::after { border-radius: 2px 2px 8px 8px; }
 
