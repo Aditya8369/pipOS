@@ -1,9 +1,14 @@
 /* toys.js: Lullaby Lab, Nightlight Collection, Rattle & Blocks, Dream Delivery. */
 (function () {
   'use strict';
-  var PIP = window.PIP;
-  var $ = PIP.$, $$ = PIP.$$, store = PIP.store, clamp = PIP.clamp, toast = PIP.toast;
-  var reduce = PIP.reduceMotion, audio = PIP.audio;
+  var PIP = (typeof window !== 'undefined' && window.PIP) ? window.PIP : {};
+  var $ = PIP.$ || function () { return null; };
+  var $$ = PIP.$$ || function () { return []; };
+  var store = PIP.store || { get: function () { return ''; }, set: function () {} };
+  var clamp = PIP.clamp || function (v, a, b) { return Math.min(b, Math.max(a, v)); };
+  var toast = PIP.toast || function () {};
+  var reduce = PIP.reduceMotion || { matches: false };
+  var audio = PIP.audio || { isOn: function () { return false; }, note: function () {} };
 
   /* =====================================================================
      1. LULLABY LAB
@@ -158,8 +163,178 @@
      ===================================================================== */
   function initLights() {
     var room = $('#darkroom'), lanternsEl = $('#lanterns'), trayN = $('#trayN');
+    var roomsEl = $('#drRooms'), resetBtn = $('#drResetRoom');
     if (!room || !lanternsEl) return;
-    var items = $$('[data-item]', room);
+
+    var ROOMS = [
+      { id: 'nursery', name: 'Nursery', hint: 'Dark nursery. Move your pointer, drag the lantern, or use arrow keys to shine the light.' },
+      { id: 'attic', name: 'Attic', hint: 'Dusty attic. Move your pointer, drag the lantern, or use arrow keys to shine the light.' },
+      { id: 'garden', name: 'Garden', hint: 'Night garden. Move your pointer, drag the lantern, or use arrow keys to shine the light.' }
+    ];
+
+    var curRoom = store.get('dr_room', 'nursery');
+    if (curRoom !== 'nursery' && curRoom !== 'attic' && curRoom !== 'garden') {
+      curRoom = 'nursery';
+    }
+
+    var foundByRoom = { nursery: [], attic: [], garden: [] };
+    try {
+      var rawFound = store.get('dr_found', '');
+      if (rawFound) {
+        var parsed = JSON.parse(rawFound);
+        if (parsed && typeof parsed === 'object') {
+          ['nursery', 'attic', 'garden'].forEach(function (k) {
+            if (Array.isArray(parsed[k])) foundByRoom[k] = parsed[k];
+          });
+        }
+      }
+    } catch (e) {}
+
+    // Fallbacks for individual room store keys if dr_found was empty
+    ['nursery', 'attic', 'garden'].forEach(function (k) {
+      if (!foundByRoom[k].length) {
+        var ind = store.get('dr_found_' + k, '');
+        if (ind) {
+          try {
+            var arr = JSON.parse(ind);
+            if (Array.isArray(arr)) foundByRoom[k] = arr;
+          } catch (e) {}
+        }
+      }
+    });
+
+    function saveProgress() {
+      store.set('dr_found', JSON.stringify(foundByRoom));
+      var counts = {
+        nursery: foundByRoom.nursery.length,
+        attic: foundByRoom.attic.length,
+        garden: foundByRoom.garden.length
+      };
+      var total = counts.nursery + counts.attic + counts.garden;
+      store.set('dr_counts', JSON.stringify(counts));
+      store.set('dr_count_nursery', counts.nursery);
+      store.set('dr_count_attic', counts.attic);
+      store.set('dr_count_garden', counts.garden);
+      store.set('dr_total_found', total);
+      store.set('dr_room', curRoom);
+      store.set('nightlight_found', total);
+      store.set('nightlight_counts', JSON.stringify(counts));
+    }
+
+    function syncRoomElements() {
+      ['nursery', 'attic', 'garden'].forEach(function (rk) {
+        var rEl = $('.dr-room[data-room="' + rk + '"]', room);
+        if (!rEl) return;
+        var rItems = $$('[data-item]', rEl);
+        var foundList = foundByRoom[rk] || [];
+        rItems.forEach(function (it) {
+          var name = it.getAttribute('data-name');
+          if (name && foundList.indexOf(name) !== -1) {
+            it.classList.add('is-found');
+          } else {
+            it.classList.remove('is-found');
+          }
+        });
+        var badge = $('#roomCount' + rk.charAt(0).toUpperCase() + rk.slice(1));
+        if (badge) {
+          badge.textContent = foundList.length + '/' + rItems.length;
+        }
+      });
+    }
+
+    function updateRoomView() {
+      room.setAttribute('data-current-room', curRoom);
+      var roomConf = ROOMS.filter(function (r) { return r.id === curRoom; })[0] || ROOMS[0];
+      room.setAttribute('aria-label', roomConf.hint);
+
+      if (roomsEl) {
+        var roomBtns = $$('.dr-room-btn', roomsEl);
+        roomBtns.forEach(function (btn) {
+          var rk = btn.getAttribute('data-room');
+          var isActive = (rk === curRoom);
+          btn.classList.toggle('is-active', isActive);
+          btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          btn.tabIndex = isActive ? 0 : -1;
+        });
+      }
+
+      var roomSections = $$('.dr-room', room);
+      roomSections.forEach(function (sec) {
+        var rk = sec.getAttribute('data-room');
+        var isActive = (rk === curRoom);
+        sec.classList.toggle('is-active', isActive);
+        if (isActive) {
+          sec.removeAttribute('hidden');
+        } else {
+          sec.setAttribute('hidden', '');
+        }
+      });
+
+      var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+      var activeItems = activeEl ? $$('[data-item]', activeEl) : [];
+      var curFound = (foundByRoom[curRoom] || []).length;
+      var total = activeItems.length || 5;
+
+      if (trayN) {
+        trayN.textContent = curFound + ' of ' + total + ' dreams found';
+      }
+      room.classList.toggle('is-done', curFound >= total && total > 0);
+    }
+
+    function setRoom(rk) {
+      if (rk !== 'nursery' && rk !== 'attic' && rk !== 'garden') return;
+      curRoom = rk;
+      store.set('dr_room', curRoom);
+      updateRoomView();
+    }
+
+    if (roomsEl) {
+      var roomBtns = $$('.dr-room-btn', roomsEl);
+      roomBtns.forEach(function (btn, idx) {
+        btn.addEventListener('click', function () {
+          var rk = btn.getAttribute('data-room');
+          setRoom(rk);
+          btn.focus();
+        });
+        btn.addEventListener('keydown', function (e) {
+          var d = (e.key === 'ArrowRight' || e.key === 'ArrowDown') ? 1
+                : (e.key === 'ArrowLeft' || e.key === 'ArrowUp') ? -1 : 0;
+          if (d !== 0) {
+            e.preventDefault();
+            var nextIdx = (idx + d + roomBtns.length) % roomBtns.length;
+            var nextBtn = roomBtns[nextIdx];
+            var nextRk = nextBtn.getAttribute('data-room');
+            setRoom(nextRk);
+            nextBtn.focus();
+          } else if (e.key === 'Home') {
+            e.preventDefault();
+            setRoom(roomBtns[0].getAttribute('data-room'));
+            roomBtns[0].focus();
+          } else if (e.key === 'End') {
+            e.preventDefault();
+            setRoom(roomBtns[roomBtns.length - 1].getAttribute('data-room'));
+            roomBtns[roomBtns.length - 1].focus();
+          }
+        });
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        foundByRoom[curRoom] = [];
+        var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+        if (activeEl) {
+          $$('[data-item]', activeEl).forEach(function (it) {
+            it.classList.remove('is-found');
+          });
+        }
+        saveProgress();
+        syncRoomElements();
+        updateRoomView();
+        var curName = curRoom.charAt(0).toUpperCase() + curRoom.slice(1);
+        toast('Dreams hidden again in the ' + curName + '.');
+      });
+    }
 
     var LANTERNS = [
       { name: 'Moon', glow: '#cfe3ff', r: 92 },
@@ -167,7 +342,7 @@
       { name: 'Rose', glow: '#ff9fc0', r: 80 },
       { name: 'Mint', glow: '#9ff0d0', r: 100 }
     ];
-    var cur = 0, x = 0, y = 0, r = LANTERNS[0].r, found = 0;
+    var cur = 0, x = 0, y = 0, r = LANTERNS[0].r;
     var lastMove = 0, visible = false;
 
     function paint() {
@@ -314,18 +489,34 @@
     // a dream is found when the lit circle covers it and you click, tap or press Enter
     function tryFind() {
       var rb = room.getBoundingClientRect();
-      items.forEach(function (it) {
+      var activeEl = $('.dr-room[data-room="' + curRoom + '"]', room);
+      if (!activeEl) return;
+      var activeItems = $$('[data-item]', activeEl);
+
+      activeItems.forEach(function (it) {
         if (it.classList.contains('is-found')) return;
         var ib = it.getBoundingClientRect();
         var ix = ib.left + ib.width / 2 - rb.left, iy = ib.top + ib.height / 2 - rb.top;
         if (Math.hypot(ix - x, iy - y) < Math.max(34, r * 0.55)) {
           it.classList.add('is-found');
-          found += 1;
-          var itName = it.getAttribute('data-name');
-          trayN.textContent = found + ' of ' + items.length + ' dreams found' + (itName ? ' (' + itName + ')' : '');
-          if (audio.isOn()) audio.note(audio.SCALE[Math.min(found + 2, 7)], { dur: 1.2, gain: 0.18 });
-          if (found === items.length) {
-            toast('All five dreams found. Pip is very proud.');
+          var itName = it.getAttribute('data-name') || it.getAttribute('data-item') || 'dream';
+          if (foundByRoom[curRoom].indexOf(itName) === -1) {
+            foundByRoom[curRoom].push(itName);
+          }
+          var curCount = foundByRoom[curRoom].length;
+          var totalInRoom = activeItems.length || 5;
+
+          saveProgress();
+          syncRoomElements();
+
+          if (trayN) {
+            trayN.textContent = curCount + ' of ' + totalInRoom + ' dreams found' + (itName ? ' (' + itName + ')' : '');
+          }
+          if (audio.isOn()) audio.note(audio.SCALE[Math.min(curCount + 2, 7)], { dur: 1.2, gain: 0.18 });
+
+          if (curCount === totalInRoom) {
+            var curName = curRoom.charAt(0).toUpperCase() + curRoom.slice(1);
+            toast('All five dreams found in the ' + curName + '! Pip is very proud.');
             room.classList.add('is-done');
             if (audio.isOn()) audio.giggle();
             if (PIP.stickers) PIP.stickers.unlock('dreams5');
@@ -353,6 +544,8 @@
     });
 
     window.addEventListener('resize', function () { if (performance.now() - lastMove > 2500) { center(); paint(); } });
+    syncRoomElements();
+    updateRoomView();
     setLantern(0);
     center();
     paint();
@@ -370,12 +563,60 @@
     var W = 300, H = 420, BH = 28;
     var PAL = ['#ff9fb4', '#ffd27a', '#9fd8c4', '#9ab8f0', '#d3a8f2', '#ffb08a'];
     var LET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+   var dpr = Math.min((window.devicePixelRatio || 1) * 1.15, 3);
     cv.width = W * dpr;
     cv.height = H * dpr;
 
     var st, raf = 0, visible = false, last = 0;
-    var best = parseInt(store.get('best', '0'), 10) || 0;
+       var THEMES = {
+      candy: { pal: PAL, line: '#5c4033', bg: null, floor: 'rgba(92,64,51,.18)', dark: false },
+      midnight: { pal: ['#7c6cff', '#3ec9ff', '#ff5fc8', '#4dffb0', '#ffd35c', '#ff7a5c'], line: '#140e24', bg: '#1b1430', floor: 'rgba(255,255,255,.14)', dark: true }
+    };
+    var MODES = {
+      easy: { start: 200, base: 90, step: 5, max: 240, hint: 'Easy: wide first block, slow and gentle.' },
+      normal: { start: 160, base: 120, step: 8, max: 340, hint: 'Normal: the classic stack.' },
+      hard: { start: 110, base: 160, step: 12, max: 430, hint: 'Hard: narrow first block, fast and getting faster.' }
+    };
+    function valid(map, key, fallback) { return map.hasOwnProperty(key) ? key : fallback; }
+    var modeKey = valid(MODES, store.get('blockMode', 'normal'), 'normal');
+    var themeKey = valid(THEMES, store.get('blockTheme', 'candy'), 'candy');
+    var mode = MODES[modeKey], theme = THEMES[themeKey];
+    function bestKey() { return modeKey === 'normal' ? 'best' : 'best-' + modeKey; }
+    var best = parseInt(store.get(bestKey(), '0'), 10) || 0;
+
+    var modeBtns = $$('[data-block-mode]'), themeBtns = $$('[data-block-theme]'), hintEl = $('#blockModeHint');
+    function syncUI() {
+      modeBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-block-mode') === modeKey));
+      });
+      themeBtns.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-block-theme') === themeKey));
+      });
+      if (hintEl) hintEl.textContent = mode.hint;
+    }
+    modeBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var k = b.getAttribute('data-block-mode');
+        if (!MODES.hasOwnProperty(k) || k === modeKey) return;
+        modeKey = k;
+        mode = MODES[k];
+        store.set('blockMode', k);
+        best = parseInt(store.get(bestKey(), '0'), 10) || 0;
+        syncUI();
+        reset();
+      });
+    });
+    themeBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var k = b.getAttribute('data-block-theme');
+        if (!THEMES.hasOwnProperty(k) || k === themeKey) return;
+        themeKey = k;
+        theme = THEMES[k];
+        store.set('blockTheme', k);
+        syncUI();
+      });
+    });
+    syncUI();
 
     function rr(x, y, w, h, rad) {
       rad = Math.min(rad, w / 2, h / 2);
@@ -390,7 +631,7 @@
     function levelY(i) { return H - 10 - (i + 1) * BH; } // world y of block i's top
 
     function reset() {
-      st = { stack: [{ x: 70, w: 160, i: 0 }], cur: null, chips: [], score: 0, over: false, cam: 0 };
+      st = { stack: [{ x: (W - mode.start) / 2, w: mode.start, i: 0 }], cur: null, chips: [], score: 0, over: false, cam: 0 };
       spawn();
       hud();
       if (!raf && visible) loop();
@@ -412,7 +653,7 @@
         st.chips.push({ x: c.x, w: c.w, y: levelY(c.i), vy: 0, i: c.i });
         st.cur = null;
         st.over = true;
-        if (st.score > best) { best = st.score; store.set('best', best); }
+        if (st.score > best) { best = st.score; store.set(bestKey(), best); }
         hud();
         toast('Wobbly! Your tower is ' + st.score + ' blocks tall.');
         if (audio.isOn()) audio.note(196, { dur: 0.6, gain: 0.2, type: 'triangle', bell: false });
@@ -434,14 +675,14 @@
         audio.note(f, { dur: perfect ? 1.4 : 0.8, gain: perfect ? 0.22 : 0.15 });
         if (perfect) audio.note(f * 1.5, { dur: 1.2, gain: 0.1, when: 0.07 });
       }
-      if (st.score > best) { best = st.score; store.set('best', best); }
+      if (st.score > best) { best = st.score; store.set(bestKey(), best); }
       hud();
       spawn();
     }
 
     function update(dt) {
       if (!st.over && st.cur) {
-        var c = st.cur, speed = Math.min(120 + st.score * 8, 340);
+        var c = st.cur, speed = Math.min(mode.base + st.score * mode.step, mode.max);
         c.x += c.dir * speed * dt;
         if (c.x < 0) { c.x = 0; c.dir = 1; }
         if (c.x + c.w > W) { c.x = W - c.w; c.dir = -1; }
@@ -453,19 +694,19 @@
     }
 
     function block(b, y, idx, alpha) {
-      var col = PAL[idx % PAL.length];
+var col = theme.pal[idx % theme.pal.length];
       ctx.globalAlpha = alpha || 1;
       rr(b.x, y, b.w, BH - 2, 7);
       ctx.fillStyle = col;
       ctx.fill();
       ctx.lineWidth = 2.5;
-      ctx.strokeStyle = '#5c4033';
+      ctx.strokeStyle = theme.line;
       ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,.35)';
       rr(b.x + 4, y + 3, b.w - 8, 6, 3);
       ctx.fill();
       if (b.w > 34) {
-        ctx.fillStyle = '#5c4033';
+       ctx.fillStyle = theme.line;
         ctx.font = '600 15px Fredoka, "Trebuchet MS", system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -477,8 +718,9 @@
     function draw() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
+          if (theme.bg) { ctx.fillStyle = theme.bg; ctx.fillRect(0, 0, W, H); }
       // floor
-      ctx.fillStyle = 'rgba(92,64,51,.18)';
+     ctx.fillStyle = theme.floor;
       ctx.fillRect(0, H - 10 + st.cam, W, 10 + 400);
       st.stack.forEach(function (b, i) { block(b, levelY(i) + st.cam, i); });
       st.chips.forEach(function (p) { block(p, p.y + st.cam, p.i, 0.9); });
@@ -496,7 +738,7 @@
           ctx.fillText('Tap to build again', W / 2, H / 2 + 20);
         } else {
           var isNight = document.documentElement.getAttribute('data-theme') === 'night';
-          ctx.fillStyle = isNight ? '#ffe9d2' : '#5c4033';
+          ctx.fillStyle = (isNight || theme.dark) ? '#ffe9d2' : '#5c4033';
           ctx.font = '500 15px Fredoka, system-ui, sans-serif';
           ctx.fillText('Tap to drop the block', W / 2, 40);
         }
@@ -526,6 +768,17 @@
       if (v && !raf) { last = performance.now(); loop(); }
     });
 
+    function updateDpr() {
+      var nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (nextDpr !== dpr) {
+        dpr = nextDpr;
+        cv.width = W * dpr;
+        cv.height = H * dpr;
+        draw();
+      }
+    }
+    window.addEventListener('resize', updateDpr);
+
     reset();
     draw();
   }
@@ -533,12 +786,24 @@
   /* =====================================================================
      4. DREAM DELIVERY ROUTE (SVG path synced to scroll)
      ===================================================================== */
+  var HOUSE_STORIES = [
+    "Boo-ton fell fast asleep hugging his favourite wooden button after Pip tucked him in.",
+    "The twins curled together under a patch quilt dreaming of chasing yarn across the clouds.",
+    "Mother Hoot turned down her twig lamp and closed her eyes to gentle night breezes.",
+    "Little Wisp drifted into a warm dream of golden stars and lavender soup.",
+    "Fern curled his bushy tail around his nose and dozed off under pine branches.",
+    "Three little frogs rested on lily pads humming quiet water lullabies until morning.",
+    "The velvet moths settled around the glowing lantern enjoying peaceful, warm dreams."
+  ];
+
   function initRoute() {
     var win = $('#route'), path = $('#routePath'), rider = $('#rider'), label = $('#routeLabel'), btn = $('#flyBtn');
     if (!win || !path || !rider || !path.getTotalLength) return;
     var houses = $$('#routeSvg .house');
     var len = path.getTotalLength();
     var p = 0, manual = false;
+    var storyBox = $('#houseStory'), storyTitle = $('#houseStoryTitle'), storyText = $('#houseStoryText'), storyClose = $('#houseStoryClose');
+    var activeHouse = null;
 
     // progress at which the route passes each house
     var samples = [];
@@ -549,6 +814,94 @@
       return 1;
     });
 
+    function openStory(h, idx) {
+      var isPassed = h.classList.contains('is-lit') || h.getAttribute('data-passed') === 'true';
+      if (!isPassed) {
+        if (label) label.textContent = 'Pip is still flying! Deliver to ' + h.getAttribute('data-name') + ' first.';
+        return;
+      }
+
+      var name = h.getAttribute('data-name') || ('House ' + (idx + 1));
+      var story = h.getAttribute('data-story') || (HOUSE_STORIES && HOUSE_STORIES[idx]) || '';
+
+      if (activeHouse && activeHouse !== h) {
+        activeHouse.classList.remove('is-active');
+        activeHouse.setAttribute('aria-expanded', 'false');
+      }
+
+      activeHouse = h;
+      h.classList.add('is-active');
+      h.setAttribute('aria-expanded', 'true');
+
+      if (storyBox) {
+        if (storyTitle) storyTitle.textContent = name;
+        if (storyText) storyText.textContent = story;
+        storyBox.removeAttribute('hidden');
+        storyBox.classList.add('is-open');
+      }
+
+      if (label) {
+        label.textContent = name + ': ' + story;
+      }
+
+      if (audio && typeof audio.isOn === 'function' && audio.isOn()) {
+        audio.note(audio.SCALE[(idx + 2) % audio.SCALE.length], { dur: 0.6, gain: 0.12 });
+      }
+    }
+
+    function closeStory() {
+      if (activeHouse) {
+        activeHouse.classList.remove('is-active');
+        activeHouse.setAttribute('aria-expanded', 'false');
+        activeHouse = null;
+      }
+      if (storyBox) {
+        storyBox.setAttribute('hidden', '');
+        storyBox.classList.remove('is-open');
+      }
+    }
+
+    houses.forEach(function (h, idx) {
+      h.setAttribute('tabindex', '0');
+      h.setAttribute('role', 'button');
+      h.setAttribute('aria-haspopup', 'dialog');
+      h.setAttribute('aria-expanded', 'false');
+
+      h.addEventListener('click', function (e) {
+        e.stopPropagation();
+        openStory(h, idx);
+      });
+
+      h.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          openStory(h, idx);
+        } else if (e.key === 'Escape') {
+          closeStory();
+        }
+      });
+    });
+
+    if (storyClose) {
+      storyClose.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeStory();
+      });
+    }
+
+    document.addEventListener('click', function (e) {
+      if (storyBox && !storyBox.hasAttribute('hidden') && !storyBox.contains(e.target)) {
+        closeStory();
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && storyBox && !storyBox.hasAttribute('hidden')) {
+        closeStory();
+      }
+    });
+
     function set(v) {
       p = clamp(v, 0, 1);
       var pt = path.getPointAtLength(len * p);
@@ -556,8 +909,13 @@
       var passed = -1;
       houses.forEach(function (h, k) {
         var on = p >= at[k];
-        h.classList.toggle('is-lit', on);
-        if (on) passed = k;
+        if (on) {
+          h.classList.add('is-lit');
+          h.setAttribute('data-passed', 'true');
+          passed = k;
+        } else if (!h.hasAttribute('data-passed')) {
+          h.classList.remove('is-lit');
+        }
       });
       if (p <= 0.01) label.textContent = 'Waiting at the nursery window';
       else if (p >= 0.995) {
@@ -706,6 +1064,7 @@
   }
 
   PIP.toys = {
+    HOUSE_STORIES: HOUSE_STORIES,
     init: function () {
       initLab();
       initLights();
@@ -715,4 +1074,10 @@
       initGrowthChart();
     }
   };
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      HOUSE_STORIES: HOUSE_STORIES
+    };
+  }
 })();

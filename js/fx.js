@@ -152,17 +152,28 @@
     try {
       var a = JSON.parse(store.get('wall', '[]'));
       if (!Array.isArray(a)) return [];
-      return a.filter(function (x) { return x && typeof x.n === 'string' && typeof x.w === 'string'; }).slice(-30);
+      return a.filter(function (x) { return x && typeof x.n === 'string' && typeof x.w === 'string'; }).slice(0, 30);
     } catch (e) { return []; }
   }
 
   function saveLocalWish(item) {
     try {
       var current = loadLocalWishes();
-      current.push(item);
-      current = current.slice(-30);
+      current.unshift(item);
+      current = current.slice(0, 30);
       store.set('wall', JSON.stringify(current));
     } catch (e) {}
+  }
+
+  function deleteLocalWish(idx) {
+    try {
+      var current = loadLocalWishes();
+      if (typeof idx === 'number' && idx >= 0 && idx < current.length) {
+        current.splice(idx, 1);
+        store.set('wall', JSON.stringify(current));
+      }
+      return current;
+    } catch (e) { return []; }
   }
 
   function loadRateHistory() {
@@ -178,8 +189,70 @@
     } catch (e) {}
   }
 
+  function formatWishesText(wishes) {
+    var list = Array.isArray(wishes) ? wishes : [];
+    var lines = [
+      "Pip's Wish Wall — My Wishes",
+      "===========================",
+      ""
+    ];
+    if (list.length === 0) {
+      lines.push("No wishes pinned yet.");
+    } else {
+      list.forEach(function (x, idx) {
+        var name = (x && x.n) ? x.n : 'A sleepy visitor';
+        var wish = (x && x.w) ? x.w : '';
+        var dateStr = '';
+        if (x && x.t) {
+          try {
+            dateStr = ' (pinned: ' + new Date(x.t).toISOString().replace('T', ' ').slice(0, 16) + ' UTC)';
+          } catch (e) {}
+        }
+        lines.push((idx + 1) + '. "' + wish + '"');
+        lines.push('   — ' + name + dateStr);
+        lines.push('');
+      });
+    }
+    lines.push('---------------------------');
+    lines.push('Exported from pipOS • https://hax.baby');
+    lines.push('');
+    return lines.join('\n');
+  }
+
+  function exportWishes(wishes, filename, doc) {
+    var text = formatWishesText(wishes);
+    var d = doc || (typeof document !== 'undefined' ? document : null);
+    var fname = filename || 'pip-wishes.txt';
+    if (d && typeof d.createElement === 'function') {
+      var blob = (typeof Blob !== 'undefined')
+        ? new Blob([text], { type: 'text/plain;charset=utf-8' })
+        : null;
+      var url = (blob && typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function')
+        ? URL.createObjectURL(blob)
+        : 'data:text/plain;charset=utf-8,' + encodeURIComponent(text);
+      var a = d.createElement('a');
+      a.href = url;
+      a.download = fname;
+      if (typeof a.setAttribute === 'function') a.setAttribute('download', fname);
+      if (a.style) a.style.display = 'none';
+      if (d.body && typeof d.body.appendChild === 'function') {
+        d.body.appendChild(a);
+        if (typeof a.click === 'function') a.click();
+        setTimeout(function () {
+          if (a.parentNode && typeof a.parentNode.removeChild === 'function') {
+            a.parentNode.removeChild(a);
+          }
+          if (typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function' && typeof url === 'string' && url.indexOf('blob:') === 0) {
+            URL.revokeObjectURL(url);
+          }
+        }, 200);
+      }
+    }
+    return text;
+  }
+
   // Create a note DOM element strictly using textContent to prevent HTML injection (XSS)
-  function createNoteElement(x, i, doc) {
+  function createNoteElement(x, i, doc, isOwn, onDelete) {
     var d = doc || (typeof document !== 'undefined' ? document : null);
     if (!d || typeof d.createElement !== 'function') return null;
     var li = d.createElement('li');
@@ -193,6 +266,98 @@
     by.textContent = (x && typeof x.n === 'string') ? x.n : 'A sleepy visitor'; // Strict textContent — prevents XSS
     li.appendChild(p);
     li.appendChild(by);
+
+    if (isOwn) {
+      var delBtn = d.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'note-del';
+      if (typeof delBtn.setAttribute === 'function') {
+        delBtn.setAttribute('aria-label', 'Delete wish from ' + (x.n || 'visitor'));
+        delBtn.setAttribute('title', 'Delete wish');
+      }
+      delBtn.textContent = '✕';
+
+      if (typeof delBtn.addEventListener === 'function') {
+        delBtn.addEventListener('click', function (e) {
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          if (typeof li.querySelector === 'function' && li.querySelector('.note-confirm')) return;
+
+          var confirmBox = d.createElement('div');
+          confirmBox.className = 'note-confirm';
+          if (typeof confirmBox.setAttribute === 'function') {
+            confirmBox.setAttribute('role', 'group');
+            confirmBox.setAttribute('aria-label', 'Confirm wish deletion');
+          }
+
+          var confirmTxt = d.createElement('span');
+          confirmTxt.className = 'note-confirm-txt';
+          confirmTxt.textContent = 'Delete wish?';
+
+          var btnRow = d.createElement('div');
+          btnRow.className = 'note-confirm-btns';
+
+          var yesBtn = d.createElement('button');
+          yesBtn.type = 'button';
+          yesBtn.className = 'btn-confirm-yes';
+          yesBtn.textContent = 'Delete';
+          if (typeof yesBtn.setAttribute === 'function') {
+            yesBtn.setAttribute('aria-label', 'Confirm delete wish');
+          }
+
+          var noBtn = d.createElement('button');
+          noBtn.type = 'button';
+          noBtn.className = 'btn-confirm-no';
+          noBtn.textContent = 'Cancel';
+          if (typeof noBtn.setAttribute === 'function') {
+            noBtn.setAttribute('aria-label', 'Cancel deletion');
+          }
+
+          btnRow.appendChild(yesBtn);
+          btnRow.appendChild(noBtn);
+          confirmBox.appendChild(confirmTxt);
+          confirmBox.appendChild(btnRow);
+
+          if (delBtn.style) delBtn.style.display = 'none';
+          li.appendChild(confirmBox);
+
+          if (typeof yesBtn.focus === 'function') {
+            yesBtn.focus();
+          }
+
+          function dismiss() {
+            if (confirmBox.parentNode && typeof confirmBox.parentNode.removeChild === 'function') {
+              confirmBox.parentNode.removeChild(confirmBox);
+            }
+            if (delBtn.style) delBtn.style.display = '';
+            if (typeof delBtn.focus === 'function') {
+              delBtn.focus();
+            }
+          }
+
+          noBtn.addEventListener('click', function (ev) {
+            if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
+            dismiss();
+          });
+
+          confirmBox.addEventListener('keydown', function (ev) {
+            if (ev && ev.key === 'Escape') {
+              if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+              dismiss();
+            }
+          });
+
+          yesBtn.addEventListener('click', function (ev) {
+            if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
+            if (typeof onDelete === 'function') {
+              onDelete(x, i);
+            }
+          });
+        });
+      }
+
+      li.appendChild(delBtn);
+    }
+
     return li;
   }
 
@@ -201,6 +366,7 @@
     if (!form || !list) return;
     var wish = $('#gbWish'), name = $('#gbName'), count = $('#gbCount'), err = $('#gbError');
     var statusEl = $('#gbFine');
+    var exportBtn = $('#gbExport');
     var wall = PIP.wall;
     var backend = getBackendConfig();
 
@@ -211,12 +377,37 @@
       list.textContent = '';
       var all = activeWishes.concat(SEEDS);
       all.forEach(function (x, i) {
-        var note = createNoteElement(x, i, document);
+        var isOwn = (i < activeWishes.length);
+        var note = createNoteElement(x, i, document, isOwn, function (wishItem, wishIndex) {
+          deleteWish(wishIndex);
+        });
         if (note) list.appendChild(note);
       });
     }
 
+    function deleteWish(idx) {
+      if (typeof idx !== 'number' || idx < 0 || idx >= activeWishes.length) return;
+      activeWishes.splice(idx, 1);
+      store.set('wall', JSON.stringify(activeWishes));
+      render();
+      toast('Wish deleted.');
+      if (PIP.audio && typeof PIP.audio.isOn === 'function' && PIP.audio.isOn()) {
+        PIP.audio.note(PIP.audio.SCALE[1], { dur: 0.3, gain: 0.1 });
+      }
+    }
+
     render();
+
+    if (exportBtn) {
+      exportBtn.addEventListener('click', function () {
+        if (!activeWishes || activeWishes.length === 0) {
+          toast('No personal wishes to export yet.');
+          return;
+        }
+        exportWishes(activeWishes, 'pip-wishes.txt');
+        toast('Wishes exported to pip-wishes.txt!');
+      });
+    }
 
     // If backend is configured, attempt retrieval
     if (backend && wall) {
@@ -294,30 +485,22 @@
       // Optimistic or confirmed update
       if (backend && isConnected && wall) {
         wall.postWish(backend, newWish, function (success) {
-          if (success) {
-            activeWishes.unshift(newWish);
-            activeWishes = activeWishes.slice(0, 30);
-            render();
-            toast('Pinned to the wall. Pip yawns happily.');
-          } else {
-            // Failed to post remotely: fall back to local storage
-            saveLocalWish(newWish);
-            activeWishes.unshift(newWish);
-            activeWishes = activeWishes.slice(0, 30);
-            render();
-            toast('Pinned to your local wall (offline mode).');
-          }
+          activeWishes.unshift(newWish);
+          activeWishes = activeWishes.slice(0, 30);
+          store.set('wall', JSON.stringify(activeWishes));
+          render();
+          toast(success ? 'Pinned to the wall. Pip yawns happily.' : 'Pinned to your local wall (offline mode).');
         });
       } else {
         // Local mode or fallback
-        saveLocalWish(newWish);
         activeWishes.unshift(newWish);
         activeWishes = activeWishes.slice(0, 30);
+        store.set('wall', JSON.stringify(activeWishes));
         render();
         toast('Pinned to the wall. Pip yawns happily.');
       }
 
-      if (PIP.audio.isOn()) {
+      if (PIP.audio && typeof PIP.audio.isOn === 'function' && PIP.audio.isOn()) {
         PIP.audio.note(PIP.audio.SCALE[4], { dur: 0.9, gain: 0.15 });
         PIP.audio.note(PIP.audio.SCALE[6], { dur: 1.1, gain: 0.13, when: 0.1 });
       }
@@ -327,12 +510,22 @@
   PIP.fx = {
     confetti: confetti,
     createNoteElement: createNoteElement,
+    formatWishesText: formatWishesText,
+    exportWishes: exportWishes,
+    loadLocalWishes: loadLocalWishes,
+    saveLocalWish: saveLocalWish,
+    deleteLocalWish: deleteLocalWish,
     init: function () { initSparkles(); initOdometer(); initWall(); }
   };
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
       createNoteElement: createNoteElement,
+      formatWishesText: formatWishesText,
+      exportWishes: exportWishes,
+      loadLocalWishes: loadLocalWishes,
+      saveLocalWish: saveLocalWish,
+      deleteLocalWish: deleteLocalWish,
       ROT: ROT,
       SEEDS: SEEDS
     };
