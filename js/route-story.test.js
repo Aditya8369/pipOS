@@ -32,7 +32,7 @@ test('all 7 houses in index.html have 1-sentence resident stories under 25 words
     const tag = match[0];
 
     // Check data-name
-    assert.match(tag, new RegExp(`data-name=["']${residentNames[idx].replace("'", "['’]")}["']`, 'i'),
+    assert.match(tag, new RegExp(`data-name=["']${residentNames[idx].replace(/'/g, "['’]")}["']`, 'i'),
       `House ${idx + 1} must have name "${residentNames[idx]}"`);
 
     // Extract data-story
