@@ -719,6 +719,17 @@
       if (v && !raf) { last = performance.now(); loop(); }
     });
 
+    function updateDpr() {
+      var nextDpr = Math.min(window.devicePixelRatio || 1, 2);
+      if (nextDpr !== dpr) {
+        dpr = nextDpr;
+        cv.width = W * dpr;
+        cv.height = H * dpr;
+        draw();
+      }
+    }
+    window.addEventListener('resize', updateDpr);
+
     reset();
     draw();
   }
