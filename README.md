@@ -402,6 +402,13 @@ The Wish Wall (`#wall`) is an interactive community guestbook where visitors pin
 - **Sanitization:** All inputs are stripped of invisible Unicode characters, control bytes, and null characters (`sanitize()`).
 - **Safe Rendering:** Wish notes are rendered exclusively through `document.createElement()` and `element.textContent`. No user input is ever evaluated as HTML.
 
+### Managing Your Wishes (Delete & Export)
+- **Delete Own Wishes:** Visitors can delete their own pinned wishes from `localStorage` (`pip:wall`). Seeded canon notes (*Boo-ton*, *Mrs. Hoot*, *Wisp*) are permanently protected and never render delete controls.
+- **Two-Step Inline Confirmation:** Activating the `✕` delete button on a note opens an inline confirmation prompt (*"Delete wish? [Delete] [Cancel]"*) right on the card, preventing accidental deletions.
+- **Full Keyboard & Screen Reader Accessibility:** Native `<button>` elements with descriptive ARIA labels (`aria-label="Delete wish..."`). Pressing `Enter` or `Space` opens the confirm dialog and auto-focuses the confirmation button. Pressing `Escape` or `Cancel` dismisses the prompt and returns focus to the delete button.
+- **Zero-Reload In-Place Updates:** Confirmed deletions update `activeWishes` and `pip:wall` in `localStorage`, immediately re-rendering the DOM with a friendly confirmation toast (`"Wish deleted."`) without a page reload.
+- **Plain Text File Export:** Clicking **Export wishes (.txt)** (`#gbExport`) compiles all of the visitor's stored wishes into a clean, timestamped plain text file (`pip-wishes.txt`) and initiates a client-side download without any external server dependency.
+
 ---
 
 ## 🛡️ Security, Content Security Policy & XSS Defense
@@ -556,7 +563,7 @@ pipOS/
 ├── manifest.webmanifest         # PWA Web App Manifest (standalone display, icons, theme colors)
 ├── sw.js                        # Offline-first Service Worker with cache revalidation & font fallbacks
 ├── css/
-│   └── style.css                # 17 organized sections: design tokens, .win component, animations, dock
+│   └── style.css                # 18 organized sections: design tokens, .win component, animations, dock, print
 ├── js/
 │   ├── util.js                  # DOM helpers ($ / $$), local storage wrappers, clamp, reduce-motion
 │   ├── audio.js                 # Web Audio synthesizer, pentatonic scale, impulse convolver, generative lullaby
@@ -566,6 +573,10 @@ pipOS/
 │   ├── fx.js                    # Sparkle cursor trail, canvas confetti, dream odometer, wish wall DOM
 │   ├── wall.js                  # Wish wall backend adapter (Firebase/Supabase), rate limiting, sanitization
 │   ├── main.js                  # Lifecycle orchestration, theme engine, sound switch, clock, storybook
+│   ├── a11y.test.js             # Node test suite for accessibility (skip links, SVG, inert states)
+│   ├── audio.test.js            # Node test suite for Web Audio synthesis, volume limits & melodies
+│   ├── growth.test.js           # Node test suite for growth chart milestones & animation
+│   ├── i18n.test.js             # Node test suite for bilingual English/Hindi dictionary parity
 │   ├── maths.js                 # Exported block-stacking collision and drop math for automated unit testing
 │   ├── a11y.test.js             # Node test suite for accessibility (skip links, SVG, inert states)
 │   ├── audio.test.js            # Node test suite for Web Audio synthesis, volume limits & melodies

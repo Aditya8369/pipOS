@@ -2236,6 +2236,7 @@ html.js .growth-chart.is-visible .growth-fill {
   border-radius: 4px;
   box-shadow: 3px 3px 0 var(--shadow);
   transform: rotate(var(--rot, 0deg));
+  word-break: break-word;
 }
 
 .note p {
