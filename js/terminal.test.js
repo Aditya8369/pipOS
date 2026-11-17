@@ -37,6 +37,27 @@ test('terminal command execution returns expected outputs for help, whoami, and 
   // calc division by zero
   const divZero = term.executeCommand('calc 10 / 0');
   assert.match(divZero.output, /Error \(÷ 0\)/);
+
+  // wish command
+  let savedWish = null;
+  global.PIP = global.PIP || {};
+  global.PIP.fx = {
+    saveLocalWish: function (w) { savedWish = w; }
+  };
+  global.PIP.stickers = {
+    unlock: function () {}
+  };
+  try {
+    const wishRes = term.executeCommand('wish Sweet dreams Pip');
+    assert.ok(wishRes.ok, 'wish command must succeed without throwing');
+    assert.match(wishRes.output, /Wish pinned to Midnight Wish Wall/i);
+    assert.ok(savedWish, 'wish must be saved locally via saveLocalWish');
+    assert.strictEqual(savedWish.n, 'terminal.exe');
+    assert.strictEqual(savedWish.w, 'Sweet dreams Pip');
+  } finally {
+    delete global.PIP.fx;
+    delete global.PIP.stickers;
+  }
 });
 
 test('tab autocompletion returns matching command candidates', () => {
