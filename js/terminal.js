@@ -43,6 +43,12 @@
     return phases[day % phases.length];
   }
 
+  function getPIP() {
+    if (typeof window !== 'undefined' && window.PIP) return window.PIP;
+    if (typeof global !== 'undefined' && global.PIP) return global.PIP;
+    return PIP;
+  }
+
   function executeCommand(input) {
     var raw = input ? input.trim() : '';
     if (!raw) return { ok: true, output: '' };
@@ -144,12 +150,15 @@
           out = "Usage: wish <your dream or wish>";
         } else {
           var wishText = args.join(' ');
-          if (PIP.wall && typeof PIP.wall.postWish === 'function') {
-            PIP.wall.postWish({ name: 'terminal.exe', wish: wishText });
-            out = "✨ Wish dispatched to Midnight Wish Wall: \"" + wishText + "\"";
-          } else {
-            out = "Wish saved: \"" + wishText + "\" (Wall offline)";
+          var wishObj = { n: 'terminal.exe', w: wishText, t: Date.now() };
+          var p = getPIP();
+          if (p && p.fx && typeof p.fx.saveLocalWish === 'function') {
+            p.fx.saveLocalWish(wishObj);
           }
+          if (p && p.stickers && typeof p.stickers.unlock === 'function') {
+            p.stickers.unlock('wish');
+          }
+          out = "✨ Wish pinned to Midnight Wish Wall: \"" + wishText + "\"";
         }
         break;
 
