@@ -44,7 +44,13 @@
       wall_submit: 'Pin my wish',
       wall_fine: 'Wishes are saved on this device only.',
       odo_title: 'Dreams delivered tonight',
-      odo_fine: "Pip's own tally, ticking up while you read."
+      odo_fine: "Pip's own tally, ticking up while you read.",
+      Day: 'Day',
+      Night: 'Night',
+      'Sound on': 'Sound on',
+      'Sound off': 'Sound off',
+      'Turn sound on': 'Turn sound on',
+      'Turn sound off': 'Turn sound off'
     },
     hi: {
       nav_pip: 'पिप',
@@ -82,7 +88,13 @@
       wall_submit: 'ख्वाहिश जोड़ें',
       wall_fine: 'ख्वाहिशें केवल इसी डिवाइस पर सुरक्षित हैं।',
       odo_title: 'आज रात पहुँचाए गए सपने',
-      odo_fine: 'पिप की अपनी गिनती, जो पढ़ते-पढ़ते बढ़ती जाती है।'
+      odo_fine: 'पिप की अपनी गिनती, जो पढ़ते-पढ़ते बढ़ती जाती है।',
+      Day: 'दिन',
+      Night: 'रात',
+      'Sound on': 'ध्वनि चालू',
+      'Sound off': 'ध्वनि बंद',
+      'Turn sound on': 'ध्वनि चालू करें',
+      'Turn sound off': 'ध्वनि बंद करें'
     }
   };
 
@@ -115,6 +127,31 @@
     if (label) {
       label.textContent = lang === 'hi' ? 'हिन्दी' : 'EN';
     }
+
+    if (typeof document.dispatchEvent === 'function') {
+      try {
+        var ev = (typeof CustomEvent === 'function')
+          ? new CustomEvent('pip-language-change', { detail: { lang: lang } })
+          : (function () {
+              var e = document.createEvent('CustomEvent');
+              e.initCustomEvent('pip-language-change', true, true, { lang: lang });
+              return e;
+            })();
+        document.dispatchEvent(ev);
+      } catch (e) {
+        try {
+          var ev2 = document.createEvent('Event');
+          ev2.initEvent('pip-language-change', true, true);
+          document.dispatchEvent(ev2);
+        } catch (err) {}
+      }
+    }
+  }
+
+  function t(text) {
+    if (!text) return '';
+    var dict = TRANSLATIONS[curLang] || TRANSLATIONS.en;
+    return (dict && dict[text]) ? dict[text] : text;
   }
 
   function toggle() {
@@ -134,6 +171,7 @@
     init: init,
     apply: apply,
     toggle: toggle,
+    t: t,
     getLang: function () { return curLang; },
     TRANSLATIONS: TRANSLATIONS
   };

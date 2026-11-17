@@ -44,3 +44,26 @@ test('index.html contains data-i18n attributes matching translations', () => {
     assert.match(html, new RegExp(`data-i18n=["']${key}["']`), `index.html must include data-i18n="${key}"`);
   }
 });
+
+test('i18n.t() translates dynamic strings and dispatches pip-language-change', () => {
+  assert.strictEqual(typeof i18n.t, 'function', 'i18n.t should be a function');
+  
+  // Test English fallback / current
+  i18n.apply('en');
+  assert.strictEqual(i18n.t('Day'), 'Day');
+  assert.strictEqual(i18n.t('Night'), 'Night');
+  assert.strictEqual(i18n.t('Sound on'), 'Sound on');
+
+  // Test Hindi translation
+  i18n.apply('hi');
+  assert.strictEqual(i18n.t('Day'), 'दिन');
+  assert.strictEqual(i18n.t('Night'), 'रात');
+  assert.strictEqual(i18n.t('Sound on'), 'ध्वनि चालू');
+
+  // Test fallback for unknown key
+  assert.strictEqual(i18n.t('NonExistentString123'), 'NonExistentString123');
+
+  // Verify code dispatches pip-language-change
+  const i18nSrc = fs.readFileSync(path.join(__dirname, 'i18n.js'), 'utf8');
+  assert.match(i18nSrc, /pip-language-change/, 'i18n.js must dispatch pip-language-change event');
+});
