@@ -97,11 +97,10 @@
       btn.setAttribute('aria-label', tr(on ? 'Turn sound off' : 'Turn sound on'));
       if (label) label.textContent = tr(on ? 'Sound on' : 'Sound off');
       btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      btn.setAttribute('aria-label', on ? 'Sound on, turn sound off' : 'Sound off, turn sound on');
-      if (label) label.textContent = on ? 'Sound on' : 'Sound off';
     }
     paint(audio.state());
     audio.onChange(paint);
+    document.addEventListener('pip-language-change', function () { paint(audio.state()); });
     btn.addEventListener('click', function () { audio.toggle(); });
     if (audio.state() === '') {
       window.setTimeout(function () {
