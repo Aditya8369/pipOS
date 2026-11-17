@@ -971,8 +971,12 @@
               </div>
               <div class="term-prompt-row">
                 <span class="term-prompt-label" aria-hidden="true">pip@midnight:~$</span>
-                <input type="text" id="termInput" class="term-input" autocomplete="off" spellcheck="false" aria-label="Terminal command input prompt" placeholder="type a command...">
+                <div class="term-input-wrap">
+                  <input type="text" id="termInput" class="term-input" autocomplete="off" spellcheck="false" aria-label="Terminal command input prompt" placeholder="type a command...">
+                  <span id="termGhost" class="term-ghost" aria-hidden="true"></span>
+                </div>
               </div>
+              <div id="termSuggestions" class="term-suggestions" aria-label="Command suggestions"></div>
             </div>
           </div>
         </article>
