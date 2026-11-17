@@ -1006,6 +1006,7 @@ var col = theme.pal[idx % theme.pal.length];
     }
 
     function closeStory() {
+      var prevHouse = activeHouse;
       if (activeHouse) {
         activeHouse.classList.remove('is-active');
         activeHouse.setAttribute('aria-expanded', 'false');
@@ -1014,6 +1015,9 @@ var col = theme.pal[idx % theme.pal.length];
       if (storyBox) {
         storyBox.setAttribute('hidden', '');
         storyBox.classList.remove('is-open');
+      }
+      if (prevHouse && typeof prevHouse.focus === 'function') {
+        prevHouse.focus({ preventScroll: true });
       }
     }
 
