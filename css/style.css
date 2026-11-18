@@ -217,6 +217,95 @@ code { font-size: 0.9em; background: var(--blush); padding: 0.05rem 0.3rem; bord
 .tb-btn.is-hint { animation: ring 2.2s ease-in-out infinite; }
 .clock { font: 600 0.9rem var(--f-ui); min-width: 4.6rem; text-align: right; }
 
+.taskbar-running {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 440px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding: 2px 4px;
+}
+.taskbar-running::-webkit-scrollbar {
+  display: none;
+}
+.taskbar-pill, .taskbar-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 10px;
+  font: 600 0.8rem var(--f-ui);
+  color: var(--ink);
+  background: var(--paper, #fffbf4);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 2px 0 var(--shadow);
+  cursor: pointer;
+  white-space: nowrap;
+  touch-action: manipulation;
+  transition: transform 0.08s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.08s ease;
+  user-select: none;
+}
+.taskbar-pill:hover, .taskbar-item:hover {
+  background: #ffffff;
+  border-color: var(--berry);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 0 var(--shadow);
+}
+.taskbar-pill:active, .taskbar-item:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 var(--shadow);
+}
+.taskbar-pill:focus-visible, .taskbar-item:focus-visible {
+  outline: 2px solid var(--berry);
+  outline-offset: 1px;
+}
+.taskbar-pill.is-focused, .taskbar-pill.is-active,
+.taskbar-item.is-focused, .taskbar-item.is-active {
+  background: var(--berry);
+  color: #ffffff;
+  border-color: var(--line);
+  box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+.taskbar-pill-dot, .taskbar-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.6);
+  flex-shrink: 0;
+}
+.taskbar-pill.is-minimized .taskbar-pill-dot,
+.taskbar-item.is-minimized .taskbar-indicator {
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.6);
+}
+.taskbar-pill.is-focused .taskbar-pill-dot,
+.taskbar-item.is-focused .taskbar-indicator {
+  background: #ffe9ae;
+  box-shadow: 0 0 6px #ffe9ae;
+}
+.taskbar-pill.is-minimized, .taskbar-item.is-minimized {
+  opacity: 0.88;
+  background: rgba(255, 255, 255, 0.65);
+  border-style: dashed;
+}
+[data-theme="night"] .taskbar-pill, [data-theme="night"] .taskbar-item {
+  background: var(--paper);
+  color: var(--ink);
+}
+[data-theme="night"] .taskbar-pill.is-focused, [data-theme="night"] .taskbar-item.is-focused {
+  background: var(--berry);
+  color: #ffffff;
+}
+[data-theme="night"] .taskbar-pill.is-minimized, [data-theme="night"] .taskbar-item.is-minimized {
+  background: rgba(30, 24, 40, 0.65);
+}
+
 /* ===================================================================   05. Desktop Shortcuts (Large Screens >= 1360px)
    ========================================================================== */
 .desk-icons { position: fixed; left: 18px; top: 84px; z-index: 5; display: none; flex-direction: column; gap: 14px; }
@@ -260,10 +349,18 @@ main { max-width: 1120px; margin: 0 auto; padding: 92px 16px 40px; }
 /* ===================================================================   07. Window Component (.win)
    ========================================================================== */
 .win {
+  position: relative;
   margin: 0 0 28px;
   background: var(--paper); color: var(--ink);
   border: 3px solid var(--line); border-radius: 14px; box-shadow: 7px 7px 0 var(--shadow);
   overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+.win.is-focused {
+  box-shadow: 0 0 0 3px var(--berry), 10px 10px 0 var(--shadow);
+}
+.win.is-minimized {
+  display: none !important;
 }
 .win-bar {
   display: flex; align-items: center; gap: 0.6rem;
