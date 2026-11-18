@@ -499,6 +499,7 @@
   safe('haptics', PIP.haptics && PIP.haptics.init);
   safe('recorder', PIP.recorder && PIP.recorder.init);
   safe('story', initStory);
+  safe('dressup', PIP.dressup ? PIP.dressup.init : function () {});
   safe('navspy', initNavSpy);
   safe('flashlight', PIP.flashlight ? PIP.flashlight.init : function () {});
   safe('trash', initTrash);
