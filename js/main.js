@@ -310,6 +310,10 @@
       if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
         e.preventDefault();
         toggleShortcuts(false);
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (PIP.flashlight && typeof PIP.flashlight.toggle === 'function') {
+          PIP.flashlight.toggle();
+        }
       } else if (e.key === 'Escape' && body && !body.hidden && win.contains(document.activeElement)) {
         var btn = $('.win-btn', win);
         if (btn) btn.click();
@@ -496,6 +500,7 @@
   safe('recorder', PIP.recorder && PIP.recorder.init);
   safe('story', initStory);
   safe('navspy', initNavSpy);
+  safe('flashlight', PIP.flashlight ? PIP.flashlight.init : function () {});
   safe('trash', initTrash);
   safe('sw', initServiceWorker);
 })();
