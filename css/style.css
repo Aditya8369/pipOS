@@ -1509,6 +1509,37 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
   outline-offset: 1px;
 }
 
+.note-react {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 0.6rem;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1.5px solid rgba(92, 64, 51, 0.45);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #4a332a;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, background 0.1s ease, border-color 0.1s ease;
+  user-select: none;
+}
+.note-react:hover {
+  background: #ffffff;
+  border-color: #5c4033;
+  transform: scale(1.04);
+}
+.note-react:active {
+  transform: scale(0.96);
+}
+.note-react:focus-visible {
+  outline: 2px solid var(--berry, #a34063);
+  outline-offset: 1px;
+}
+
 .note-confirm {
   position: absolute;
   inset: 0;
