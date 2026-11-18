@@ -780,8 +780,12 @@
     }
 
     function drop() {
+      if (!st) { reset(); return; }
       if (st.over) { reset(); return; }
-      var top = st.stack[st.stack.length - 1], c = st.cur;
+      if (!st.cur) return;
+      var top = (st.stack && st.stack.length) ? st.stack[st.stack.length - 1] : null;
+      if (!top) return;
+      var c = st.cur;
       var left = Math.max(c.x, top.x), right = Math.min(c.x + c.w, top.x + top.w), ov = right - left;
       if (ov < 3) {
         st.chips.push({ x: c.x, w: c.w, y: levelY(c.i), vy: 0, i: c.i });
@@ -1309,10 +1313,57 @@ var col = theme.pal[idx % theme.pal.length];
     return Math.pow(1.08, Math.min(combo - 1, 8));
   }
 
+  function downloadCanvas(canvasEl, filename) {
+    if (!canvasEl) return false;
+    var name = filename || 'pip-game-snapshot.png';
+    if (!/\.png$/i.test(name)) name += '.png';
+
+    function triggerDownload(url) {
+      var doc = (canvasEl && canvasEl.ownerDocument) || (typeof document !== 'undefined' ? document : null);
+      if (!doc || typeof doc.createElement !== 'function') return;
+      var a = doc.createElement('a');
+      a.href = url;
+      a.download = name;
+      if (typeof a.setAttribute === 'function') a.setAttribute('download', name);
+      if (a.style) a.style.display = 'none';
+      if (doc.body && typeof doc.body.appendChild === 'function') {
+        doc.body.appendChild(a);
+        if (typeof a.click === 'function') a.click();
+        setTimeout(function () {
+          if (a.parentNode && typeof a.parentNode.removeChild === 'function') {
+            a.parentNode.removeChild(a);
+          }
+          if (typeof URL !== 'undefined' && typeof URL.revokeObjectURL === 'function' && typeof url === 'string' && url.indexOf('blob:') === 0) {
+            URL.revokeObjectURL(url);
+          }
+        }, 150);
+      }
+    }
+
+    if (typeof canvasEl.toBlob === 'function') {
+      canvasEl.toBlob(function (blob) {
+        if (!blob) return;
+        var url = (typeof URL !== 'undefined' && typeof URL.createObjectURL === 'function')
+          ? URL.createObjectURL(blob)
+          : '';
+        if (url) {
+          triggerDownload(url);
+        }
+      }, 'image/png');
+      return true;
+    } else if (typeof canvasEl.toDataURL === 'function') {
+      var dataUrl = canvasEl.toDataURL('image/png');
+      triggerDownload(dataUrl);
+      return true;
+    }
+    return false;
+  }
+
   PIP.toys = {
     HOUSE_STORIES: HOUSE_STORIES,
     updateLeaderboardList: updateLeaderboardList,
     getComboPitchMultiplier: getComboPitchMultiplier,
+    downloadCanvas: downloadCanvas,
     init: function () {
       initLab();
       initLights();
@@ -1327,7 +1378,8 @@ var col = theme.pal[idx % theme.pal.length];
     module.exports = {
       HOUSE_STORIES: HOUSE_STORIES,
       updateLeaderboardList: updateLeaderboardList,
-      getComboPitchMultiplier: getComboPitchMultiplier
+      getComboPitchMultiplier: getComboPitchMultiplier,
+      downloadCanvas: downloadCanvas
     };
   }
 })();

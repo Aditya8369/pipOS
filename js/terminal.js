@@ -28,7 +28,7 @@
 
   var COMMANDS = [
     'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet',
-    'play', 'wish', 'fortune', 'dream', 'calc', 'clear', 'history'
+    'play', 'wish', 'fortune', 'dream', 'calc', 'blocks', 'clear', 'history'
   ];
 
   var FORTUNES = [
@@ -90,6 +90,7 @@
           "  wish <text>        - Post a wish to the wish wall",
           "  fortune / dream    - Read a midnight prophecy",
           "  calc <expr>        - Quick arithmetic evaluator (e.g., calc 24 * 7)",
+          "  blocks snapshot    - Capture and download PNG of current block tower",
           "  history            - Display recent command history",
           "  clear              - Wipe terminal screen"
         ].join('\n');
@@ -222,6 +223,23 @@
         }
         break;
 
+      case 'blocks':
+        var sub = (args[0] || '').toLowerCase();
+        if (sub === 'snapshot') {
+          var cv = typeof document !== 'undefined' ? document.getElementById('blockCanvas') : null;
+          var p = getPIP();
+          var toys = (p && p.toys) ? p.toys : (PIP.toys || {});
+          if (cv && typeof toys.downloadCanvas === 'function') {
+            toys.downloadCanvas(cv, 'pip-blocks-snapshot.png');
+            out = "📸 Stacking tower snapshot captured and downloaded!";
+          } else {
+            out = "blocks snapshot: canvas or snapshot exporter unavailable";
+          }
+        } else {
+          out = "Usage: blocks snapshot";
+        }
+        break;
+
       case 'history':
         out = history.map(function (h, i) { return (i + 1) + '  ' + h; }).join('\n');
         break;
@@ -266,6 +284,11 @@
       params: ['on', 'off'],
       hint: ' [on|off]',
       pills: ['quiet on', 'quiet off']
+    },
+    blocks: {
+      params: ['snapshot'],
+      hint: ' [snapshot]',
+      pills: ['blocks snapshot']
     }
   };
 
