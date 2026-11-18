@@ -23,6 +23,7 @@ var PRECACHE_ASSETS = [
   'js/taskbar.js',
   'js/monitor.js',
   'js/notes.js',
+  'js/window-manager.js',
   'js/calc.js',
   'js/dressup.js',
   'js/flashlight.js',
