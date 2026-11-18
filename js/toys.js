@@ -780,8 +780,12 @@
     }
 
     function drop() {
+      if (!st) { reset(); return; }
       if (st.over) { reset(); return; }
-      var top = st.stack[st.stack.length - 1], c = st.cur;
+      if (!st.cur) return;
+      var top = (st.stack && st.stack.length) ? st.stack[st.stack.length - 1] : null;
+      if (!top) return;
+      var c = st.cur;
       var left = Math.max(c.x, top.x), right = Math.min(c.x + c.w, top.x + top.w), ov = right - left;
       if (ov < 3) {
         st.chips.push({ x: c.x, w: c.w, y: levelY(c.i), vy: 0, i: c.i });

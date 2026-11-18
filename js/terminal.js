@@ -39,8 +39,10 @@
     "Sleep is the gentle machine that rewinds tomorrow's wonders."
   ];
 
-  var history = [];
-  var historyIndex = -1;
+  var cmdHistory = [];
+  var historyIdx = -1;
+  var pendingBuffer = '';
+  var history = cmdHistory;
 
   function sanitize(str) {
     if (!str) return '';
@@ -68,8 +70,9 @@
     var raw = input ? input.trim() : '';
     if (!raw) return { ok: true, output: '' };
 
-    history.push(raw);
-    historyIndex = history.length;
+    cmdHistory.push(raw);
+    historyIdx = -1;
+    pendingBuffer = '';
 
     var parts = raw.split(/\s+/);
     var cmd = parts[0].toLowerCase();
@@ -492,6 +495,8 @@
         appendLine('pip@midnight:~$ ' + val, true);
         var res = executeCommand(val);
         input.value = '';
+        historyIdx = -1;
+        pendingBuffer = '';
         resetTabCycle();
         updateGhostAndSuggestions();
 
@@ -504,22 +509,27 @@
         if (audio.isOn()) audio.pop();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (history.length > 0 && historyIndex > 0) {
-          historyIndex--;
-          input.value = history[historyIndex];
+        if (cmdHistory.length > 0) {
+          if (historyIdx === -1) {
+            pendingBuffer = input.value;
+            historyIdx = cmdHistory.length - 1;
+          } else if (historyIdx > 0) {
+            historyIdx--;
+          }
+          input.value = cmdHistory[historyIdx];
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (historyIndex < history.length - 1) {
-          historyIndex++;
-          input.value = history[historyIndex];
-          setCursorEnd(input);
-          updateGhostAndSuggestions();
-        } else {
-          historyIndex = history.length;
-          input.value = '';
+        if (historyIdx !== -1) {
+          if (historyIdx < cmdHistory.length - 1) {
+            historyIdx++;
+            input.value = cmdHistory[historyIdx];
+          } else {
+            historyIdx = -1;
+            input.value = pendingBuffer;
+          }
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
@@ -547,7 +557,9 @@
     init: initTerminal,
     executeCommand: executeCommand,
     autocomplete: autocomplete,
-    getHistory: function () { return history; },
+    getHistory: function () { return cmdHistory; },
+    cmdHistory: cmdHistory,
+    getHistoryIdx: function () { return historyIdx; },
     COMMANDS: COMMANDS,
     PARAM_HINTS: PARAM_HINTS
   };
