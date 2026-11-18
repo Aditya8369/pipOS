@@ -2,9 +2,9 @@
    one failure can never take the rest of the page down. */
 (function () {
   'use strict';
-  var PIP = window.PIP;
-  var $ = PIP.$, $$ = PIP.$$, store = PIP.store, clamp = PIP.clamp, reduce = PIP.reduceMotion;
-  var audio = PIP.audio;
+  var PIP = (typeof window !== 'undefined' && window.PIP) ? window.PIP : ((typeof global !== 'undefined' && global.PIP) ? global.PIP : {});
+  var $ = PIP.$ || function () { return null; }, $$ = PIP.$$ || function () { return []; }, store = PIP.store || { get: function () { return ''; }, set: function () {} }, clamp = PIP.clamp || function (v, a, b) { return Math.min(b, Math.max(a, v)); }, reduce = PIP.reduceMotion || { matches: false };
+  var audio = PIP.audio || { isOn: function () { return false; }, keyClick: function () {} };
   var tr = function (text, params) { return PIP.i18n && typeof PIP.i18n.t === 'function' ? PIP.i18n.t(text, params) : text; };
   var toast = function (text, ms) { PIP.toast(tr(text), ms); };
 
@@ -511,10 +511,43 @@
     }
   }
 
+  /* ---------- mechanical key click feedback on input elements ---------- */
+  function initKeyClick() {
+    if (typeof document === 'undefined') return;
+
+    function handleKeyClick(e) {
+      if (e && e._keyClickHandled) return;
+      var t = e ? e.target : null;
+      if (!t) return;
+      var matchesTarget = false;
+      if (typeof t.matches === 'function') {
+        matchesTarget = t.matches('.term-input, .wall-input');
+      } else if (t.className && typeof t.className === 'string') {
+        matchesTarget = t.className.indexOf('term-input') !== -1 || t.className.indexOf('wall-input') !== -1;
+      }
+      if (matchesTarget) {
+        if (e) e._keyClickHandled = true;
+        var a = (typeof window !== 'undefined' && window.PIP && window.PIP.audio) ? window.PIP.audio : (PIP.audio || audio);
+        if (a && typeof a.isOn === 'function' && a.isOn() && typeof a.keyClick === 'function') {
+          a.keyClick();
+        }
+      }
+    }
+
+    document.addEventListener('input', handleKeyClick);
+
+    var inputs = $$('.term-input, .wall-input');
+    inputs.forEach(function (el) {
+      if (el && typeof el.addEventListener === 'function') {
+        el.addEventListener('input', handleKeyClick);
+      }
+    });
+  }
+
   /* ---------- go ---------- */
   safe('images', PIP.optionalImages);
   safe('i18n', PIP.i18n ? PIP.i18n.init : function () {});
-  safe('pip', PIP.pip.init);
+  safe('pip', PIP.pip ? PIP.pip.init : function () {});
   safe('theme', initTheme);
   safe('sound', initSound);
   safe('quiet', initQuiet);
@@ -522,8 +555,8 @@
   safe('foldable', initFoldable);
   safe('shortcuts', initShortcuts);
   safe('stickers', PIP.stickers && PIP.stickers.init);
-  safe('fx', PIP.fx.init);
-  safe('toys', PIP.toys.init);
+  safe('fx', PIP.fx ? PIP.fx.init : function () {});
+  safe('toys', PIP.toys ? PIP.toys.init : function () {});
   safe('stars', PIP.stars && PIP.stars.init);
   safe('rattle', PIP.rattle && PIP.rattle.init);
   safe('drag', PIP.drag && PIP.drag.init);
@@ -535,4 +568,14 @@
   safe('flashlight', PIP.flashlight ? PIP.flashlight.init : function () {});
   safe('trash', initTrash);
   safe('sw', initServiceWorker);
+  safe('keyClick', initKeyClick);
+
+  PIP.initKeyClick = initKeyClick;
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      initTheme: initTheme,
+      initSound: initSound,
+      initKeyClick: initKeyClick
+    };
+  }
 })();

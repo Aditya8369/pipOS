@@ -181,6 +181,54 @@
     }
   }
 
+  // Mechanical key click: ultra-short (15ms) bandpass filtered white noise burst with decaying pulse
+  function keyClick() {
+    if (!isOn() || !ensure()) return;
+    try {
+      var now = ctx.currentTime;
+      var dur = 0.015; // 15ms burst
+      var rate = ctx.sampleRate || 44100;
+      var len = Math.max(1, Math.floor(rate * dur));
+      var buf = ctx.createBuffer(1, len, rate);
+      var d = buf.getChannelData(0);
+      for (var i = 0; i < len; i++) {
+        d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+      }
+
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+
+      var filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(3000, now);
+      filter.Q.setValueAtTime(2.2, now);
+
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.08, now);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+      src.connect(filter);
+      filter.connect(g);
+      g.connect(master);
+
+      src.start(now);
+      src.stop(now + dur + 0.002);
+    } catch (e) {
+      try {
+        var osc = ctx.createOscillator();
+        var og = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(2400, ctx.currentTime);
+        og.gain.setValueAtTime(0.06, ctx.currentTime);
+        og.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.015);
+        osc.connect(og);
+        og.connect(master);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.02);
+      } catch (err) {}
+    }
+  }
+
   // Never-ending random-walk lullaby on the pentatonic scale
   function startEndless(onNote) {
     stopEndless();
@@ -476,6 +524,7 @@
     pad: pad,
     pop: pop,
     giggle: giggle,
+    keyClick: keyClick,
     startEndless: startEndless,
     stopEndless: stopEndless,
     isEndless: isEndless,
@@ -509,7 +558,8 @@
       stopWind: stopWind,
       isWindActive: isWindActive,
       note: note,
-      pad: pad
+      pad: pad,
+      keyClick: keyClick
     };
   }
 })();
