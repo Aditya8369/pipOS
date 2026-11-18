@@ -73,3 +73,9 @@ test('js/toys.js implements combo tracking and DOM updates in initBlocks', () =>
   assert.match(toysSrc, /renderLeaderboard\(/, 'Must call renderLeaderboard to update DOM');
   assert.match(toysSrc, /saveTopScore\(/, 'Must save score on game over');
 });
+
+test('js/toys.js drop() guards against missing st.cur to prevent TypeError', () => {
+  const toysSrc = fs.readFileSync(TOYS_JS_PATH, 'utf8');
+
+  assert.match(toysSrc, /if\s*\(!st\.cur\)\s*return;/, 'drop() must guard against missing st.cur before reading properties');
+});
