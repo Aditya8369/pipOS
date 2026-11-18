@@ -27,7 +27,7 @@
   var toast = PIP.toast || function () {};
 
   var COMMANDS = [
-    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet',
+    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet', 'crt',
     'play', 'wish', 'fortune', 'dream', 'calc', 'clear', 'history'
   ];
 
@@ -68,6 +68,9 @@
     var raw = input ? input.trim() : '';
     if (!raw) return { ok: true, output: '' };
 
+    var curPIP = getPIP();
+    var curStore = (curPIP && curPIP.store) ? curPIP.store : store;
+
     history.push(raw);
     historyIndex = history.length;
 
@@ -86,6 +89,7 @@
           "  theme [t]          - Get or set theme ('day', 'night', 'contrast')",
           "  sound [on|off]     - Check or toggle audio synthesizer",
           "  quiet [on|off]     - Check or toggle quiet mode",
+          "  crt [on|off]       - Toggle vintage CRT scanline and phosphor bloom overlay",
           "  play [chime|lullaby] - Synthesize Web Audio melody",
           "  wish <text>        - Post a wish to the wish wall",
           "  fortune / dream    - Read a midnight prophecy",
@@ -152,6 +156,26 @@
         var qBtn = document.getElementById('quietBtn');
         if (qBtn) qBtn.click();
         out = "Quiet mode toggled.";
+        break;
+
+      case 'crt':
+        var crtArg = args.length > 0 ? args[0].toLowerCase() : '';
+        var curCrt = curStore.get('crt_mode', '') === 'true' || curStore.get('crt_mode', '') === true;
+        var nextCrt;
+        if (crtArg === 'on') nextCrt = true;
+        else if (crtArg === 'off') nextCrt = false;
+        else nextCrt = !curCrt;
+
+        curStore.set('crt_mode', nextCrt ? 'true' : 'false');
+        if (typeof document !== 'undefined' && document.body) {
+          document.body.classList.toggle('crt-active', nextCrt);
+          if (typeof document.dispatchEvent === 'function') {
+            try {
+              document.dispatchEvent(new CustomEvent('pip-crt-toggle', { detail: { active: nextCrt } }));
+            } catch (err) {}
+          }
+        }
+        out = "CRT scanline & phosphor bloom overlay: " + (nextCrt ? "ON 📺" : "OFF");
         break;
 
       case 'play':
@@ -266,6 +290,11 @@
       params: ['on', 'off'],
       hint: ' [on|off]',
       pills: ['quiet on', 'quiet off']
+    },
+    crt: {
+      params: ['on', 'off'],
+      hint: ' [on|off]',
+      pills: ['crt on', 'crt off']
     }
   };
 
