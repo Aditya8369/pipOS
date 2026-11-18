@@ -245,8 +245,7 @@
           <div class="pip-float">
             <svg id="pipSvg" class="pip-svg" viewBox="0 0 420 440" role="group" aria-labelledby="pipT pipD">
               <title id="pipT">Pip, the skull baby</title>
-              <desc id="pipD">A cute baby with a round skull face, glowing amber eyes, a tiny crooked smile and a starry
-                nightcap with a pink bow, floating on a cloud and waving.</desc>
+              <desc id="pipD">A cute baby with a round skull face, glowing amber eyes, a tiny crooked smile and a starry nightcap with a pink bow, floating on a cloud and waving.</desc>
               <defs>
                 <radialGradient id="gGlow">
                   <stop offset="0" stop-color="#fffbe6" />
@@ -709,6 +708,7 @@
                 <span class="block-combo" id="blockCombo" aria-live="polite" hidden></span>
               </div>
             </div>
+            <div class="block-leaderboard" id="blockLeaderboard">
             <div class="block-leaderboard" id="blockLeaderboardWrap">
               <h4 class="lb-title">Top 5 Builders</h4>
               <ol class="lb-list" id="blockLeaderboard" aria-label="Top 5 stacking heights">
@@ -1015,6 +1015,16 @@
                 <button class="btn btn-primary" id="bookNext" type="button" aria-label="Next storybook page">Next
                   →</button>
               </div>
+
+              <!-- Added speech narration controls -->
+              <div class="book-speech" role="group" aria-label="Story narration controls">
+                <button class="btn" id="storySpeechBtn" type="button" aria-label="Read this scene aloud">🔊
+                  Read</button>
+                <button class="btn" id="storyPauseBtn" type="button" aria-label="Pause narration" hidden>⏸
+                  Pause</button>
+                <button class="btn" id="storyStopBtn" type="button" aria-label="Stop narration" hidden>⏹ Stop</button>
+              </div>
+
             <!-- Added speech narration controls -->
             <div class="book-speech" role="group" aria-label="Story narration controls">
               <button class="btn" id="storySpeechBtn" type="button" aria-label="Read this scene aloud">🔊 Read</button>
@@ -1044,6 +1054,8 @@
               </div>
             </div>
             <div class="stars-canvas-wrap">
+              <canvas id="starsCanvas" width="300" height="380" aria-label="Catch the Falling Stars canvas game"
+                tabindex="0"></canvas>
               <canvas id="starsCanvas" width="300" height="380" aria-label="Catch the Falling Stars canvas game" tabindex="0"></canvas>
               <div id="starsGameOver" class="stars-overlay hidden" hidden>
                 <div class="stars-modal">
@@ -1051,6 +1063,7 @@
                   <h4 class="stars-modal-title">Dawn has arrived</h4>
                   <p class="stars-modal-msg">Pip's cloud gathered <span id="starsFinalScore">0</span> starlight dreams.
                   </p>
+                  <button type="button" id="starsRestartBtn" class="btn btn-sm">Sleep Again</button>
                 </div>
               </div>
             </div>
@@ -1318,8 +1331,6 @@
               </div>
               <div class="term-prompt-row">
                 <span class="term-prompt-label" aria-hidden="true">pip@midnight:~$</span>
-                <input type="text" id="termInput" class="term-input" autocomplete="off" spellcheck="false"
-                  aria-label="Terminal command input prompt" placeholder="type a command...">
                 <div class="term-input-wrap">
                   <input type="text" id="termInput" class="term-input" autocomplete="off" spellcheck="false" aria-label="Terminal command input prompt" placeholder="type a command...">
                   <span id="termGhost" class="term-ghost" aria-hidden="true"></span>
