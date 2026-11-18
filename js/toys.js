@@ -637,6 +637,9 @@
   /* =====================================================================
      3. RATTLE & BLOCKS (stacker)
      ===================================================================== */
+  var blocksRenderLeaderboard = null;
+  var blocksSyncBest = null;
+
   function initBlocks() {
     var cv = $('#blockCanvas'), btn = $('#blockDrop'), scoreEl = $('#blockScore');
     var leaderboardListEl = $('#blockLeaderboardList'), comboEl = $('#blockCombo');
@@ -743,6 +746,13 @@
     });
     syncUI();
     renderLeaderboard();
+    blocksRenderLeaderboard = renderLeaderboard;
+    blocksSyncBest = function (newBest) {
+      if (newBest > best) {
+        best = newBest;
+        hud();
+      }
+    };
 
     function rr(x, y, w, h, rad) {
       rad = Math.min(rad, w / 2, h / 2);
@@ -871,8 +881,30 @@ var col = theme.pal[idx % theme.pal.length];
       ctx.clearRect(0, 0, W, H);
           if (theme.bg) { ctx.fillStyle = theme.bg; ctx.fillRect(0, 0, W, H); }
       // floor
-     ctx.fillStyle = theme.floor;
+      ctx.fillStyle = theme.floor;
       ctx.fillRect(0, H - 10 + st.cam, W, 10 + 400);
+
+      // Subtle dotted horizontal "Record Height" marker (bestMarker)
+      if (best > 0) {
+        var bestMarker = levelY(best) + st.cam;
+        if (bestMarker >= -20 && bestMarker <= H + 20) {
+          ctx.save();
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = theme.dark ? 'rgba(255, 215, 0, 0.45)' : 'rgba(92, 64, 51, 0.4)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(8, bestMarker);
+          ctx.lineTo(W - 8, bestMarker);
+          ctx.stroke();
+
+          ctx.fillStyle = theme.dark ? 'rgba(255, 215, 0, 0.85)' : 'rgba(92, 64, 51, 0.8)';
+          ctx.font = '500 11px Fredoka, system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('Record Height: ' + best, W - 12, bestMarker - 3);
+          ctx.restore();
+        }
+      }
       st.stack.forEach(function (b, i) { block(b, levelY(i) + st.cam, i); });
       st.chips.forEach(function (p) { block(p, p.y + st.cam, p.i, 0.9); });
       if (st.cur) block(st.cur, levelY(st.cur.i) + st.cam, st.cur.i);

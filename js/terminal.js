@@ -255,6 +255,11 @@
   }
 
   var PARAM_HINTS = {
+    blocks: {
+      params: ['stats', 'export'],
+      hint: ' [stats|export]',
+      pills: ['blocks stats', 'blocks export']
+    },
     theme: {
       params: ['day', 'night', 'contrast'],
       hint: ' [day|night|contrast]',
