@@ -978,6 +978,10 @@ var col = theme.pal[idx % theme.pal.length];
   function initRoute() {
     var win = $('#route'), path = $('#routePath'), rider = $('#rider'), label = $('#routeLabel'), btn = $('#flyBtn');
     if (!win || !path || !rider || !path.getTotalLength) return;
+    var canvas = $('#routeCanvas') || (typeof document !== 'undefined' ? document.getElementById('routeCanvas') : null);
+    var ctx = canvas && canvas.getContext ? canvas.getContext('2d') : null;
+    var trail = [];
+    var moving = false;
     var houses = $$('#routeSvg .house');
     var len = path.getTotalLength();
     var p = 0, manual = false;
@@ -1135,17 +1139,63 @@ var col = theme.pal[idx % theme.pal.length];
       if (manual) return;
       if (reduce.matches) { set(p >= 0.99 ? 0 : 1); return; }
       manual = true;
+      moving = true;
+      trail = [];
       btn.setAttribute('aria-busy', 'true');
       var t0 = performance.now(), dur = 5200;
+      var lastT = t0;
       (function step(now) {
+        var dt = Math.min((now - lastT) / 1000, 0.1);
+        lastT = now;
         var k = clamp((now - t0) / dur, 0, 1);
         var e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; // ease in-out
         set(e);
-        if (k < 1) window.requestAnimationFrame(step);
-        else window.setTimeout(function () {
-          manual = false;
-          btn.removeAttribute('aria-busy');
-        }, 1500);
+
+        if (k >= 1) {
+          moving = false;
+        }
+
+        var pt = path.getPointAtLength(len * e);
+        if (moving === true) {
+          trail.push({
+            x: pt.x - 14 + (Math.random() * 6 - 3),
+            y: pt.y + 2 + (Math.random() * 6 - 3),
+            opacity: 0.9,
+            radius: 1.5 + Math.random() * 2
+          });
+        }
+
+        for (var i = trail.length - 1; i >= 0; i--) {
+          trail[i].opacity -= dt * 2;
+          if (trail[i].opacity <= 0) {
+            trail.splice(i, 1);
+          }
+        }
+
+        if (ctx && canvas) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          for (var j = 0; j < trail.length; j++) {
+            var tp = trail[j];
+            if (tp.opacity > 0) {
+              ctx.beginPath();
+              ctx.arc(tp.x, tp.y, Math.max(0.2, tp.radius), 0, Math.PI * 2);
+              ctx.fillStyle = 'rgba(255, 235, 160, ' + Math.max(0, tp.opacity).toFixed(3) + ')';
+              ctx.fill();
+            }
+          }
+        }
+
+        if (k < 1 || trail.length > 0) {
+          window.requestAnimationFrame(step);
+        } else {
+          if (ctx && canvas) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          }
+          window.setTimeout(function () {
+            manual = false;
+            btn.removeAttribute('aria-busy');
+          }, 1500);
+        }
       })(t0);
       if (audio.isOn()) {
         [0, 2, 4, 3, 5, 4, 7].forEach(function (n, k) {
@@ -1165,6 +1215,43 @@ var col = theme.pal[idx % theme.pal.length];
     });
 
     fromScroll();
+  }
+
+  function updateRouteTrail(trail, dt, moving, cloudPt) {
+    if (!Array.isArray(trail)) return [];
+    var delta = typeof dt === 'number' && !isNaN(dt) ? dt : 0.016;
+    if (moving === true && cloudPt) {
+      trail.push({
+        x: (typeof cloudPt.x === 'number' ? cloudPt.x : 0) - 14 + (Math.random() * 6 - 3),
+        y: (typeof cloudPt.y === 'number' ? cloudPt.y : 0) + 2 + (Math.random() * 6 - 3),
+        opacity: 0.9,
+        radius: 1.5 + Math.random() * 2
+      });
+    }
+    for (var i = trail.length - 1; i >= 0; i--) {
+      trail[i].opacity -= delta * 2;
+      if (trail[i].opacity <= 0) {
+        trail.splice(i, 1);
+      }
+    }
+    return trail;
+  }
+
+  function renderRouteTrail(ctx, trail, width, height) {
+    if (!ctx) return;
+    var w = typeof width === 'number' ? width : 600;
+    var h = typeof height === 'number' ? height : 290;
+    ctx.clearRect(0, 0, w, h);
+    if (!Array.isArray(trail) || trail.length === 0) return;
+    for (var j = 0; j < trail.length; j++) {
+      var tp = trail[j];
+      if (tp.opacity > 0) {
+        ctx.beginPath();
+        ctx.arc(tp.x, tp.y, Math.max(0.2, tp.radius), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 235, 160, ' + Math.max(0, tp.opacity).toFixed(3) + ')';
+        ctx.fill();
+      }
+    }
   }
 
   /* =====================================================================
@@ -1448,6 +1535,8 @@ var col = theme.pal[idx % theme.pal.length];
     getBestMarkerY: getBestMarkerY,
     exportScores: exportScores,
     importScores: importScores,
+    updateRouteTrail: updateRouteTrail,
+    renderRouteTrail: renderRouteTrail,
     init: function () {
       initLab();
       initLights();
@@ -1465,7 +1554,9 @@ var col = theme.pal[idx % theme.pal.length];
       getComboPitchMultiplier: getComboPitchMultiplier,
       getBestMarkerY: getBestMarkerY,
       exportScores: exportScores,
-      importScores: importScores
+      importScores: importScores,
+      updateRouteTrail: updateRouteTrail,
+      renderRouteTrail: renderRouteTrail
     };
   }
 })();
