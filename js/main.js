@@ -187,19 +187,42 @@
       var bar = $('.win-bar', win), body = $('.win-body', win), title = $('.win-title', win);
       if (!bar || !body) return;
       if (!body.id) body.id = 'winbody' + n;
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'win-btn';
-      b.setAttribute('aria-controls', body.id);
-      b.setAttribute('data-silent', '');
+      var b = $('.win-btn', bar);
+      if (!b) {
+        b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'win-btn';
+        b.setAttribute('aria-controls', body.id);
+        b.setAttribute('data-silent', '');
+        bar.appendChild(b);
+      }
       function paint() {
-        var open = !body.hidden;
+        var open = !body.hidden && !win.classList.contains('is-minimized');
         b.setAttribute('aria-expanded', open ? 'true' : 'false');
-        b.setAttribute('aria-label', (open ? 'Fold up ' : 'Open ') + (title ? title.textContent : 'window'));
+        b.setAttribute('aria-label', (open ? 'Minimize ' : 'Restore ') + (title ? title.textContent : 'window'));
         b.textContent = open ? '−' : '+';
       }
-      b.addEventListener('click', function () { body.hidden = !body.hidden; paint(); });
-      bar.appendChild(b);
+      b.addEventListener('click', function (e) {
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        var open = !body.hidden && !win.classList.contains('is-minimized');
+        if (open) {
+          if (PIP.taskbar && typeof PIP.taskbar.minimizeWindow === 'function') {
+            PIP.taskbar.minimizeWindow(win);
+          } else {
+            body.hidden = true;
+            win.classList.add('is-minimized');
+            paint();
+          }
+        } else {
+          if (PIP.taskbar && typeof PIP.taskbar.restoreWindow === 'function') {
+            PIP.taskbar.restoreWindow(win);
+          } else {
+            body.hidden = false;
+            win.classList.remove('is-minimized');
+            paint();
+          }
+        }
+      });
       paint();
     });
   }
