@@ -2,14 +2,19 @@
    one failure can never take the rest of the page down. */
 (function () {
   'use strict';
-  var PIP = window.PIP;
-  var $ = PIP.$, $$ = PIP.$$, store = PIP.store, clamp = PIP.clamp, reduce = PIP.reduceMotion;
-  var audio = PIP.audio;
+  var PIP = (typeof window !== 'undefined' && window.PIP) ? window.PIP : ((typeof global !== 'undefined' && global.PIP) ? global.PIP : {});
+  var $ = PIP.$ || function () { return null; };
+  var $$ = PIP.$$ || function () { return []; };
+  var store = PIP.store || { get: function () { return ''; }, set: function () {} };
+  var clamp = PIP.clamp || function (v, a, b) { return Math.min(b, Math.max(a, v)); };
+  var reduce = PIP.reduceMotion || { matches: false };
+  var audio = PIP.audio || { state: function () { return ''; } };
   var tr = function (text, params) { return PIP.i18n && typeof PIP.i18n.t === 'function' ? PIP.i18n.t(text, params) : text; };
-  var toast = function (text, ms) { PIP.toast(tr(text), ms); };
+  var toast = function (text, ms) { if (PIP.toast) PIP.toast(tr(text), ms); };
 
   function safe(name, fn) {
-    try { fn(); } catch (e) { if (window.console) console.error('[pip] ' + name + ' failed:', e); }
+    if (typeof fn !== 'function') return;
+    try { fn(); } catch (e) { if (typeof console !== 'undefined' && console.error) console.error('[pip] ' + name + ' failed:', e); }
   }
 
   /* ---------- day / night / auto / high contrast ---------- */
@@ -164,16 +169,55 @@
   }
 
   /* ---------- clock ---------- */
+  function renderClock(date, format) {
+    var d = date || new Date();
+    var fmt = format === '24' ? '24' : '12';
+    return d.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: fmt === '12',
+      second: fmt === '24' ? '2-digit' : undefined
+    });
+  }
+
   function initClock() {
     var el = $('#clock');
     if (!el) return;
+
+    var format = store.get('clock_format', '12');
+    if (format !== '12' && format !== '24') format = '12';
+
     function tick() {
       if (!document.hidden) {
-        el.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        el.textContent = renderClock(new Date(), format);
+        if (el.setAttribute) {
+          el.setAttribute('title', 'Taskbar clock (' + format + '-hour mode, click to toggle)');
+          el.setAttribute('aria-label', 'Taskbar clock, ' + format + '-hour mode, click to toggle');
+        }
       }
     }
+
+    el.setAttribute('role', 'button');
+    el.setAttribute('tabindex', '0');
+
+    el.addEventListener('click', function () {
+      format = format === '12' ? '24' : '12';
+      store.set('clock_format', format);
+      tick();
+      if (PIP.audio && typeof PIP.audio.pop === 'function') {
+        PIP.audio.pop();
+      }
+    });
+
+    el.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        el.click();
+      }
+    });
+
     tick();
-    window.setInterval(tick, 20000);
+    window.setInterval(tick, 1000);
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', function () {
         if (!document.hidden) tick();
@@ -512,28 +556,40 @@
   }
 
   /* ---------- go ---------- */
-  safe('images', PIP.optionalImages);
-  safe('i18n', PIP.i18n ? PIP.i18n.init : function () {});
-  safe('pip', PIP.pip.init);
-  safe('theme', initTheme);
-  safe('sound', initSound);
-  safe('quiet', initQuiet);
-  safe('clock', initClock);
-  safe('foldable', initFoldable);
-  safe('wm', PIP.wm && PIP.wm.init);
-  safe('shortcuts', initShortcuts);
-  safe('stickers', PIP.stickers && PIP.stickers.init);
-  safe('fx', PIP.fx.init);
-  safe('toys', PIP.toys.init);
-  safe('stars', PIP.stars && PIP.stars.init);
-  safe('rattle', PIP.rattle && PIP.rattle.init);
-  safe('drag', PIP.drag && PIP.drag.init);
-  safe('haptics', PIP.haptics && PIP.haptics.init);
-  safe('recorder', PIP.recorder && PIP.recorder.init);
-  safe('story', initStory);
-  safe('dressup', PIP.dressup ? PIP.dressup.init : function () {});
-  safe('navspy', initNavSpy);
-  safe('flashlight', PIP.flashlight ? PIP.flashlight.init : function () {});
-  safe('trash', initTrash);
-  safe('sw', initServiceWorker);
+  if (typeof window !== 'undefined') {
+    safe('images', PIP.optionalImages);
+    safe('i18n', PIP.i18n ? PIP.i18n.init : function () {});
+    safe('pip', PIP.pip ? PIP.pip.init : function () {});
+    safe('theme', initTheme);
+    safe('sound', initSound);
+    safe('quiet', initQuiet);
+    safe('clock', initClock);
+    safe('foldable', initFoldable);
+    safe('wm', PIP.wm && PIP.wm.init);
+    safe('shortcuts', initShortcuts);
+    safe('stickers', PIP.stickers && PIP.stickers.init);
+    safe('fx', PIP.fx && PIP.fx.init);
+    safe('toys', PIP.toys && PIP.toys.init);
+    safe('stars', PIP.stars && PIP.stars.init);
+    safe('rattle', PIP.rattle && PIP.rattle.init);
+    safe('drag', PIP.drag && PIP.drag.init);
+    safe('haptics', PIP.haptics && PIP.haptics.init);
+    safe('recorder', PIP.recorder && PIP.recorder.init);
+    safe('story', initStory);
+    safe('dressup', PIP.dressup ? PIP.dressup.init : function () {});
+    safe('navspy', initNavSpy);
+    safe('flashlight', PIP.flashlight ? PIP.flashlight.init : function () {});
+    safe('trash', initTrash);
+    safe('sw', initServiceWorker);
+  }
+
+  PIP.renderClock = renderClock;
+  PIP.initClock = initClock;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      renderClock: renderClock,
+      initClock: initClock
+    };
+  }
 })();

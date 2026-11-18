@@ -1,4 +1,4 @@
-﻿/* ===================================================================   Pip's Dream OS - Stylesheet
+/* ===================================================================   Pip's Dream OS - Stylesheet
    Palette from haX.baby: cream #fff8f1, berry #a34063, cocoa #5c4033.
    Architecture & Tokens Guide: docs/CSS.md
 
@@ -215,7 +215,22 @@ code { font-size: 0.9em; background: var(--blush); padding: 0.05rem 0.3rem; bord
 .tb-btn.is-night .moon { display: inline; }
 .tb-btn.is-night .sun, .tb-btn.is-night .rays { display: none; }
 .tb-btn.is-hint { animation: ring 2.2s ease-in-out infinite; }
-.clock { font: 600 0.9rem var(--f-ui); min-width: 4.6rem; text-align: right; }
+.clock {
+  font: 600 0.9rem var(--f-ui);
+  min-width: 5.2rem;
+  text-align: right;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+}
+.clock:focus-visible {
+  outline: 2px solid var(--accent, #7048e8);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
 
 .taskbar-running {
   display: flex;
