@@ -27,7 +27,7 @@
   var toast = PIP.toast || function () {};
 
   var COMMANDS = [
-    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet',
+    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet', 'sleep',
     'play', 'wish', 'fortune', 'dream', 'calc', 'blocks', 'clear', 'history',
     'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'rm'
   ];
@@ -89,6 +89,7 @@
           "  theme [t]          - Get or set theme ('day', 'night', 'contrast')",
           "  sound [on|off]     - Check or toggle audio synthesizer",
           "  quiet [on|off]     - Check or toggle quiet mode",
+          "  sleep [minutes]    - Bedtime timer with gradual lullaby fade-out",
           "  play [chime|lullaby] - Synthesize Web Audio melody",
           "  wish <text>        - Post a wish to the wish wall",
           "  fortune / dream    - Read a midnight prophecy",
@@ -156,6 +157,46 @@
         var qBtn = document.getElementById('quietBtn');
         if (qBtn) qBtn.click();
         out = "Quiet mode toggled.";
+        break;
+
+      case 'sleep':
+        var pipObj = getPIP();
+        var pipAudio = (pipObj && pipObj.audio) || audio;
+        if (!pipAudio || typeof pipAudio.startSleepTimer !== 'function') {
+          if (typeof require !== 'undefined') {
+            try { pipAudio = require('./audio.js'); } catch (e) {}
+          }
+        }
+        if (args.length === 0) {
+          var remaining = (pipAudio && typeof pipAudio.getSleepTimerRemaining === 'function')
+            ? pipAudio.getSleepTimerRemaining()
+            : 0;
+          if (remaining > 0) {
+            var minsLeft = Math.ceil(remaining / 60);
+            out = "Bedtime sleep timer is active: ~" + minsLeft + " minute" + (minsLeft === 1 ? '' : 's') + " remaining (" + remaining + "s).";
+          } else {
+            out = "Usage: sleep [minutes]\nSets a bedtime timer that gradually fades audio before putting Pip to sleep.";
+          }
+        } else if (args[0] === 'stop' || args[0] === 'cancel' || args[0] === 'off') {
+          if (pipAudio && typeof pipAudio.stopSleepTimer === 'function') {
+            pipAudio.stopSleepTimer();
+            out = "Bedtime sleep timer cancelled.";
+          } else {
+            out = "No active sleep timer.";
+          }
+        } else {
+          var minutes = parseFloat(args[0]);
+          if (isNaN(minutes) || minutes <= 0) {
+            out = "Usage: sleep [minutes] (e.g. sleep 15, sleep 1)";
+          } else {
+            if (pipAudio && typeof pipAudio.startSleepTimer === 'function') {
+              pipAudio.startSleepTimer(minutes);
+              out = "🌙 Bedtime sleep timer set for " + minutes + " minute" + (minutes === 1 ? '' : 's') + ". Audio will fade out gently before bedtime.";
+            } else {
+              out = "Audio system unavailable.";
+            }
+          }
+        }
         break;
 
       case 'play':
@@ -421,6 +462,11 @@
       params: ['on', 'off'],
       hint: ' [on|off]',
       pills: ['quiet on', 'quiet off']
+    },
+    sleep: {
+      params: ['15', '30', '45', 'cancel'],
+      hint: ' [minutes]',
+      pills: ['sleep 15', 'sleep 30', 'sleep cancel']
     }
   };
 
