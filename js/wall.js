@@ -327,6 +327,59 @@
     processNext();
   }
 
+  /* ---------- Real-Time Search & Keyword Filter ---------- */
+  function filterNotes(query, rootDoc) {
+    var d = rootDoc || (typeof document !== 'undefined' ? document : null);
+    if (!d) return;
+    var q = (typeof query === 'string' ? query : '').toLowerCase();
+    var notes = d.querySelectorAll ? d.querySelectorAll('.note') : [];
+    for (var i = 0; i < notes.length; i++) {
+      var card = notes[i];
+      if (card) {
+        card.hidden = !card.textContent.toLowerCase().includes(q);
+      }
+    }
+  }
+
+  function initWallSearch(rootDoc) {
+    var d = rootDoc || (typeof document !== 'undefined' ? document : null);
+    if (!d) return null;
+    var searchInput = d.getElementById ? d.getElementById('wallSearch') : (d.querySelector ? d.querySelector('#wallSearch') : null);
+    if (searchInput && typeof searchInput.addEventListener === 'function') {
+      searchInput.addEventListener('input', function (e) {
+        if (e && e._wallSearchHandled) return;
+        if (e) e._wallSearchHandled = true;
+        var q = (e && e.target && typeof e.target.value === 'string')
+          ? e.target.value
+          : (searchInput.value || '');
+        filterNotes(q, d);
+      });
+    }
+    return searchInput;
+  }
+
+  // Automatic search initialization on page load
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        initWallSearch();
+      });
+    } else {
+      initWallSearch();
+    }
+
+    // Document-level delegation in case #wallSearch is dynamically rendered
+    document.addEventListener('input', function (e) {
+      if (e && e._wallSearchHandled) return;
+      var t = e ? e.target : null;
+      if (t && (t.id === 'wallSearch' || (typeof t.matches === 'function' && t.matches('#wallSearch')))) {
+        if (e) e._wallSearchHandled = true;
+        var query = typeof t.value === 'string' ? t.value : '';
+        filterNotes(query, document);
+      }
+    });
+  }
+
   // Automatic offline-to-online sync event listener
   if (typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('online', function () {
@@ -356,6 +409,8 @@
     queuePendingWish: queuePendingWish,
     clearPendingWishes: clearPendingWishes,
     syncPendingWishes: syncPendingWishes,
+    initWallSearch: initWallSearch,
+    filterNotes: filterNotes,
     COOLDOWN_MS: COOLDOWN_MS,
     WINDOW_MS: WINDOW_MS,
     MAX_PER_WINDOW: MAX_PER_WINDOW

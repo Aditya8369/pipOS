@@ -1,4 +1,4 @@
-﻿/* ===================================================================   Pip's Dream OS - Stylesheet
+/* ===================================================================   Pip's Dream OS - Stylesheet
    Palette from haX.baby: cream #fff8f1, berry #a34063, cocoa #5c4033.
    Architecture & Tokens Guide: docs/CSS.md
 
@@ -1548,9 +1548,30 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
 
 .wall-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 0.6rem;
   margin: 0.85rem 0 0.2rem;
+  flex-wrap: wrap;
+}
+.wall-search {
+  flex: 1 1 180px;
+  min-width: 140px;
+  max-width: 260px;
+  height: 36px;
+  padding: 0.35rem 0.85rem;
+  font: 400 0.85rem var(--f-ui);
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  outline: none;
+  box-shadow: 0 2px 0 var(--shadow);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.wall-search:focus {
+  border-color: var(--berry);
+  box-shadow: 0 0 0 2px rgba(230, 81, 102, 0.25);
 }
 .btn-tool {
   min-height: 36px;

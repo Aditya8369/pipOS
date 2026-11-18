@@ -528,6 +528,10 @@
         });
         if (note) list.appendChild(note);
       });
+      var searchInput = $('#wallSearch');
+      if (searchInput && searchInput.value && wall && typeof wall.filterNotes === 'function') {
+        wall.filterNotes(searchInput.value, document);
+      }
     }
 
     function deleteWish(idx) {
