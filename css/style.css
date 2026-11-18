@@ -381,6 +381,20 @@ main { max-width: 1120px; margin: 0 auto; padding: 92px 16px 40px; }
   font: 700 1.2rem/1 var(--f-ui); color: var(--ink);
   background: var(--cream); border: 2.5px solid var(--line); border-radius: 9px; cursor: pointer;
 }
+.win-actions { display: flex; align-items: center; gap: 6px; }
+.win.is-focused { box-shadow: 0 0 0 2px var(--amber, #f59e0b), 7px 7px 0 var(--shadow); }
+.win.is-maximized {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-height: 75vh;
+  box-shadow: 0 0 0 3px var(--amber, #f59e0b), 10px 10px 0 var(--shadow);
+  transition: all 0.18s ease-in-out;
+}
+.win.is-snapped-left, .win.is-snapped-right {
+  grid-column: span 6 !important;
+  transition: all 0.18s ease-in-out;
+}
+.win-btn-max { font-size: 1rem; }
 .win-body { padding: 1.1rem 1.2rem 1.3rem; }
 
 /* ===================================================================   08. Hero & Pip Illustration
@@ -1737,6 +1751,8 @@ html.js .growth-chart.is-visible .growth-fill { width: calc(var(--progress, 0) *
   transition: opacity 0.25s, transform 0.25s;
 }
 .toast.is-show { opacity: 1; transform: translate(-50%, 0); }
+.pip-fx-canvas { position: fixed; inset: 0; z-index: 70; width: 100%; height: 100%; pointer-events: none; }
+[data-quiet="on"] .pip-fx-canvas { display: none; }
 .confetti { position: fixed; inset: 0; z-index: 80; width: 100%; height: 100%; pointer-events: none; display: none; }
 .sparkle {
   position: fixed; z-index: 70; pointer-events: none; line-height: 1;
@@ -3125,6 +3141,301 @@ dialog.secret::backdrop { background: rgba(40, 24, 40, 0.55); }
 }
 
 /* ==========================================================================
+   Desktop Right-Click Context Menu
+   ========================================================================== */
+.desktop-context-menu {
+  position: fixed;
+  z-index: 9999;
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  min-width: 200px;
+  background: var(--paper, #fff);
+  border: 2px solid var(--line, #222);
+  border-radius: 8px;
+  box-shadow: 4px 4px 0 var(--shadow, rgba(0, 0, 0, 0.25));
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.desktop-context-menu[hidden] {
+  display: none !important;
+}
+
+[data-theme="night"] .desktop-context-menu {
+  background: #1e1636;
+  border-color: var(--gold, #f3b562);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+.cm-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 7px 10px;
+  font-family: var(--f-sans, sans-serif);
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: var(--ink, #222);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.1s ease;
+}
+
+.cm-item:hover,
+.cm-item:focus-visible {
+  background: var(--gold, #f3b562);
+  color: #1e1636;
+  outline: none;
+}
+
+[data-theme="night"] .cm-item {
+  color: #fff;
+}
+
+[data-theme="night"] .cm-item:hover,
+[data-theme="night"] .cm-item:focus-visible {
+  background: var(--gold, #f3b562);
+  color: #1e1636;
+}
+
+   Starlight Synthesizer (pip-synth.exe)
+   ========================================================================== */
+.w-synth {
+  grid-column: span 12;
+}
+
+.synth-controls {
+  margin: 12px 0 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Constellation Cartographer (pip-sky.exe)
+   ========================================================================== */
+.w-sky {
+  grid-column: span 12;
+}
+
+.sky-header {
+  margin: 12px 0;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.synth-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.synth-settings {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-family: var(--f-sans, sans-serif);
+}
+
+.synth-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.synth-slider {
+  width: 100px;
+  cursor: pointer;
+}
+
+.synth-select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line, #ccc);
+  background: var(--paper, #fff);
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.synth-grid-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid var(--line, rgba(0, 0, 0, 0.1));
+}
+
+[data-theme="night"] .synth-grid-container {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.synth-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 220px;
+  font-family: var(--f-mono, monospace);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  opacity: 0.8;
+  padding-right: 4px;
+}
+
+.synth-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+  flex: 1;
+}
+
+.synth-step-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: background 0.1s ease;
+}
+
+.synth-step-col.is-active-step {
+  background: rgba(243, 181, 98, 0.25);
+  box-shadow: 0 0 8px rgba(243, 181, 98, 0.4);
+}
+
+.synth-cell {
+  height: 38px;
+  border-radius: 6px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--line, #ddd);
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.synth-cell:hover {
+  border-color: var(--gold, #f3b562);
+  transform: scale(1.05);
+}
+
+.synth-cell.is-on {
+  background: var(--gold, #f3b562);
+  border-color: #d89643;
+  box-shadow: 0 0 10px rgba(243, 181, 98, 0.6);
+}
+
+[data-theme="night"] .synth-cell {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="night"] .synth-cell.is-on {
+  background: var(--gold, #f3b562);
+  box-shadow: 0 0 14px rgba(243, 181, 98, 0.8);
+}
+
+   PipOS Alt+Tab Task Switcher (HUD Overlay)
+   ========================================================================== */
+.task-switcher-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  background: rgba(30, 22, 54, 0.92);
+  border: 2px solid var(--gold, #f3b562);
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(243, 181, 98, 0.35);
+  backdrop-filter: blur(12px);
+  padding: 16px;
+  min-width: 320px;
+  max-width: 90vw;
+  pointer-events: auto;
+  color: #fff;
+  font-family: var(--f-sans, sans-serif);
+}
+
+.task-switcher-modal[hidden] {
+  display: none !important;
+}
+
+.task-switcher-head {
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.switcher-head-title {
+  font-family: var(--f-head, cursive);
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  color: var(--gold, #f3b562);
+}
+
+.switcher-list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.switcher-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 80px;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.switcher-item:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.switcher-item.is-selected {
+  background: rgba(243, 181, 98, 0.28);
+  border-color: var(--gold, #f3b562);
+  box-shadow: 0 0 14px rgba(243, 181, 98, 0.5);
+  transform: scale(1.06);
+}
+
+.switcher-icon {
+  font-size: 1.8rem;
+  margin-bottom: 4px;
+}
+
+.switcher-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
    20. Starlight Scientific Calculator (.w-calc)
    ========================================================================== */
 .w-calc {
@@ -3551,4 +3862,63 @@ dialog.secret::backdrop { background: rgba(40, 24, 40, 0.55); }
   font-weight: 600;
   font-size: 0.88rem;
   color: var(--ink);
+}
+
+.sky-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sky-name {
+  font-family: var(--f-head, cursive);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold, #f3b562);
+}
+
+.sky-progress {
+  font-size: 0.82rem;
+  color: var(--ink);
+  opacity: 0.8;
+}
+
+.sky-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sky-stage {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  background: radial-gradient(circle at center, #241a45 0%, #110c22 100%);
+  border-radius: 10px;
+  border: 2px solid var(--gold, #f3b562);
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+}
+
+.sky-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+.sky-lore {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: rgba(243, 181, 98, 0.12);
+  border-left: 3px solid var(--gold, #f3b562);
+  border-radius: 4px;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+[data-theme="night"] .sky-lore {
+  color: #fff;
+  background: rgba(243, 181, 98, 0.18);
 }

@@ -109,7 +109,6 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6l1.5 5h-9zM8.5 7v13a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2V7zM10 11h4"/></svg>
         <span id="flashlightLabel">Lantern</span>
       </button>
-      </button>
       <button class="tb-btn" id="themeBtn" type="button" aria-label="Day mode, switch to night mode">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle class="sun" cx="12" cy="12" r="4.5" />
@@ -1041,6 +1040,7 @@
               </div>
             </div>
             <div class="stars-canvas-wrap">
+              <canvas id="starsCanvas" width="300" height="380" aria-label="Catch the Falling Stars canvas game" tabindex="0"></canvas>
               <canvas id="starsCanvas" width="300" height="380" aria-label="Catch the Falling Stars canvas game"
                 tabindex="0"></canvas>
               <div id="starsGameOver" class="stars-overlay hidden" hidden>
@@ -1048,9 +1048,6 @@
                   <div class="stars-modal-icon" aria-hidden="true">🌙</div>
                   <h4 class="stars-modal-title">Dawn has arrived</h4>
                   <p class="stars-modal-msg">Pip's cloud gathered <span id="starsFinalScore">0</span> starlight dreams.</p>
-                  <button type="button" id="starsRestartBtn" class="btn btn-sm" tabindex="-1">Sleep Again</button>
-                  <p class="stars-modal-msg">Pip's cloud gathered <span id="starsFinalScore">0</span> starlight dreams.
-                  </p>
                   <button type="button" id="starsRestartBtn" class="btn btn-sm">Sleep Again</button>
                 </div>
               </div>
@@ -1453,6 +1450,72 @@
           </div>
         </article>
 
+        <!-- Starlight Synthesizer -->
+        <article id="w-synth" class="win w-synth" data-foldable aria-labelledby="synthTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="synthTitle">pip-synth.exe</h3>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Starlight Synthesizer: 8-step pentatonic lullaby sequencer. Tap stars to sequence sleepy melodies or export a WAV file.</p>
+            </div>
+            <div class="synth-controls row row-between">
+              <div class="synth-actions">
+                <button type="button" id="synthPlayBtn" class="btn btn-primary" aria-pressed="false">▶ Play Sequence</button>
+                <button type="button" id="synthClearBtn" class="btn">Clear</button>
+                <button type="button" id="synthExportBtn" class="btn">💾 Export WAV</button>
+              </div>
+              <div class="synth-settings">
+                <label for="synthBpm" class="synth-label">Tempo: <span id="synthBpmLabel">90 BPM</span></label>
+                <input type="range" id="synthBpm" min="50" max="180" value="90" class="synth-slider" aria-label="Sequence tempo BPM">
+                <label for="synthWave" class="synth-label">Wave:</label>
+                <select id="synthWave" class="synth-select" aria-label="Synthesizer waveform">
+                  <option value="sine">Sine (Warm)</option>
+                  <option value="triangle">Triangle (Bright)</option>
+                </select>
+              </div>
+            </div>
+            <div class="synth-grid-container">
+              <div class="synth-labels" aria-hidden="true">
+                <span>A5</span>
+                <span>G5</span>
+                <span>E5</span>
+                <span>D5</span>
+                <span>C5</span>
+              </div>
+              <div id="synthGrid" class="synth-grid" role="grid" aria-label="Lullaby sequencer 8-step grid"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Constellation Cartographer -->
+        <article id="w-sky" class="win w-sky" data-foldable aria-labelledby="skyTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="skyTitle">pip-sky.exe</h3>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Constellation Dream Cartographer: Peer through Pip's telescope and connect the glowing stars in sequence to reveal ancient dream maps.</p>
+            </div>
+            <div class="sky-header row row-between">
+              <div class="sky-meta">
+                <span id="skyConstellationName" class="sky-name">Pip's Sleepy Nightcap</span>
+                <span id="skyProgress" class="sky-progress">Stars Linked: 0 / 5</span>
+              </div>
+              <div class="sky-actions">
+                <button type="button" id="skyResetBtn" class="btn">Reset Path</button>
+                <button type="button" id="skyNextBtn" class="btn btn-primary">Next Sky Pattern →</button>
+              </div>
+            </div>
+            <div class="sky-stage">
+              <canvas id="skyCanvas" class="sky-canvas" aria-label="Interactive starlight telescope viewport"></canvas>
+            </div>
+            <div id="skyLore" class="sky-lore" aria-live="polite">
+              Connect stars 1 through 5 to decipher this celestial dream...
+            </div>
+          </div>
+        </article>
+
         <!-- Starlight Scientific Calculator -->
         <article id="calc" class="win w-calc" data-foldable aria-labelledby="calcTitle">
           <div class="win-bar">
@@ -1796,10 +1859,28 @@
     </div>
   </dialog>
 
+  <!-- Desktop Right-Click Context Menu -->
+  <menu id="desktopContextMenu" class="desktop-context-menu" hidden role="menu" aria-label="Desktop Context Menu" tabindex="-1">
+    <li role="none"><button type="button" id="cmArrange" class="cm-item" role="menuitem">📐 Arrange Icons to Grid</button></li>
+    <li role="none"><button type="button" id="cmTheme" class="cm-item" role="menuitem">🌓 Toggle Day/Night Theme</button></li>
+    <li role="none"><button type="button" id="cmTerminal" class="cm-item" role="menuitem">💻 Open Terminal</button></li>
+    <li role="none"><button type="button" id="cmSound" class="cm-item" role="menuitem">🎵 Mute/Unmute Sounds</button></li>
+  </menu>
+  <canvas id="pipFxCanvas" class="pip-fx-canvas" aria-hidden="true"></canvas>
+  <!-- Alt+Tab Task Switcher Modal -->
+  <div id="taskSwitcherModal" class="task-switcher-modal" hidden role="region" aria-label="Application Task Switcher">
+    <div class="task-switcher-head">
+      <span class="switcher-head-title">PipOS Task Switcher (Alt+Tab)</span>
+    </div>
+    <div id="taskSwitcherList" class="switcher-list" role="listbox" aria-label="Running processes"></div>
+  </div>
+
   <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <script src="js/util.js" defer></script>
+  <script src="js/security.js" defer></script>
+  <script src="js/vault.js" defer></script>
   <script src="js/audio.js" defer></script>
   <script src="js/wall.js" defer></script>
   <script src="js/fx.js" defer></script>
@@ -1808,17 +1889,23 @@
   <script src="js/pip.js" defer></script>
   <script src="js/toys.js" defer></script>
   <script src="js/rattle.js" defer></script>
+  <script src="js/vfs.js" defer></script>
   <script src="js/recorder.js" defer></script>
   <script src="js/terminal.js" defer></script>
   <script src="js/stars.js" defer></script>
   <script src="js/taskbar.js" defer></script>
+  <script src="js/task-switcher.js" defer></script>
   <script src="js/monitor.js" defer></script>
   <script src="js/notes.js" defer></script>
+  <script src="js/desktop.js" defer></script>
+  <script src="js/synth.js" defer></script>
+  <script src="js/window-manager.js" defer></script>
   <script src="js/calc.js" defer></script>
   <script src="js/dressup.js" defer></script>
   <script src="js/flashlight.js" defer></script>
   <script src="js/drag.js" defer></script>
   <script src="js/haptics.js" defer></script>
+  <script src="js/constellations.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 
