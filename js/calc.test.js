@@ -134,6 +134,52 @@ test('memory registers, chime toggle, and sheep counting Easter egg work as expe
   assert.match(calc.getState().display, /1 🐑/);
 });
 
+test('multi-term decimal input allows decimals in trailing number segment after operator or parenthesis', () => {
+  const calc = require(CALC_JS_PATH);
+
+  // Single term decimal input and duplicate prevention
+  calc.clearAll();
+  calc.inputDigit(3);
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '3.');
+  calc.inputDigit(1);
+  calc.inputDigit(4);
+  assert.strictEqual(calc.getState().display, '3.14');
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '3.14', 'Duplicate decimal point in active segment must be ignored');
+
+  // Multi-term expression with parentheses: (1.5 + 2 -> (1.5 + 2.
+  calc.clearAll();
+  calc.getState().display = '(1.5 + 2';
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '(1.5 + 2.', 'Must allow decimal point on trailing term despite prior term containing decimal');
+  calc.inputDigit(5);
+  assert.strictEqual(calc.getState().display, '(1.5 + 2.5');
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '(1.5 + 2.5', 'Must prevent duplicate decimal in active trailing term');
+
+  // Multi-term expression with operators: 1.5 * 3 -> 1.5 * 3.
+  calc.clearAll();
+  calc.getState().display = '1.5 * 3';
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '1.5 * 3.');
+
+  // Nested parentheses: ((2.5 + 3.5) * 4 -> ((2.5 + 3.5) * 4.
+  calc.clearAll();
+  calc.getState().display = '((2.5 + 3.5) * 4';
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '((2.5 + 3.5) * 4.');
+
+  // Trailing term already having decimal point: 2.5 - 1.2 -> remains 2.5 - 1.2
+  calc.clearAll();
+  calc.getState().display = '2.5 - 1.2';
+  calc.inputDecimal();
+  assert.strictEqual(calc.getState().display, '2.5 - 1.2', 'Trailing term with existing decimal point must reject another decimal');
+
+  // Calculation of multi-term decimal expression
+  assert.strictEqual(calc.evaluateExpression('(1.5 + 2.5) * 2'), '8');
+});
+
 test('index.html contains #calc article window in #work section with LCD display and keypad', () => {
   assert.ok(fs.existsSync(HTML_PATH), 'index.html must exist');
   const html = fs.readFileSync(HTML_PATH, 'utf8');

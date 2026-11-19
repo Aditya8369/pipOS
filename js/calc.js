@@ -240,8 +240,12 @@
     if (state.resetNext || state.display === 'Error') {
       state.display = '0.';
       state.resetNext = false;
-    } else if (state.display.indexOf('.') === -1) {
-      state.display += '.';
+    } else {
+      var segments = state.display.split(/[-+*/×÷−%^()]/);
+      var activeSegment = segments[segments.length - 1];
+      if (activeSegment.indexOf('.') === -1) {
+        state.display += '.';
+      }
     }
     render();
   }
