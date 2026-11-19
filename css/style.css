@@ -1786,6 +1786,80 @@ dialog.secret { width: min(92vw, 420px); margin: auto; padding: 0; }
 dialog.secret::backdrop { background: rgba(40, 24, 40, 0.55); }
 .secret-big { font: 800 1.9rem var(--f-head); color: var(--berry-ink); margin-bottom: 0.6rem; }
 
+/* Quick Keyboard Shortcuts HUD Dialog */
+dialog.shortcuts-hud,
+.shortcuts-hud {
+  width: min(92vw, 480px);
+  margin: auto;
+  padding: 0;
+  background: var(--paper);
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 6px 6px 0 var(--shadow);
+  color: var(--ink);
+  outline: none;
+}
+
+.shortcuts-hud::backdrop {
+  background: rgba(40, 24, 40, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.shortcuts-hud .win-body {
+  padding: 0.9rem 1.1rem 1.2rem;
+}
+
+.hud-intro {
+  margin: 0 0 0.8rem;
+  font-size: 0.88rem;
+  color: var(--ink);
+  opacity: 0.85;
+}
+
+.hud-definitions {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--paper-warm, rgba(0, 0, 0, 0.03));
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+}
+
+.hud-row dt {
+  margin: 0;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.hud-row dt kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: var(--f-mono, monospace);
+  font-size: 0.82rem;
+  background: var(--paper);
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 1px 1px 0 var(--shadow);
+  color: var(--ink);
+}
+
+.hud-row dd {
+  margin: 0;
+  font-size: 0.86rem;
+  text-align: right;
+  color: var(--ink);
+}
+
 /* ===================================================================   15. Keyframe Animations
    ========================================================================== */
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }

@@ -298,13 +298,29 @@
     });
   }
 
-  /* ---------- shortcuts cheat sheet (keys.txt) ---------- */
+  /* ---------- shortcuts cheat sheet (keys.txt & HUD dialog) ---------- */
   function initShortcuts() {
     var win = $('#shortcuts');
-    if (!win) return;
-    var body = $('.win-body', win);
+    var body = win ? $('.win-body', win) : null;
+    var dialog = document.getElementById('shortcutsHud') || (typeof document !== 'undefined' ? document.querySelector('dialog.shortcuts-hud') : null);
+    var closeBtn = document.getElementById('hudCloseBtn');
+
+    if (closeBtn && dialog) {
+      closeBtn.addEventListener('click', function () {
+        if (typeof dialog.close === 'function') dialog.close();
+      });
+    }
+
+    if (dialog) {
+      dialog.addEventListener('click', function (e) {
+        if (e.target === dialog && typeof dialog.close === 'function') {
+          dialog.close();
+        }
+      });
+    }
 
     function toggleShortcuts(openOnly) {
+      if (!win) return;
       var btn = $('.win-btn', win);
       var isCurrentlyOpen = body && !body.hidden;
       var isFocused = win.contains(document.activeElement);
@@ -340,14 +356,27 @@
 
       if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
         e.preventDefault();
-        toggleShortcuts(false);
+        var hud = document.getElementById('shortcutsHud') || dialog;
+        if (hud && typeof hud.showModal === 'function') {
+          if (hud.open && typeof hud.close === 'function') {
+            hud.close();
+          } else {
+            hud.showModal();
+          }
+        } else {
+          toggleShortcuts(false);
+        }
       } else if (e.key === 'f' || e.key === 'F') {
         if (PIP.flashlight && typeof PIP.flashlight.toggle === 'function') {
           PIP.flashlight.toggle();
         }
-      } else if (e.key === 'Escape' && body && !body.hidden && win.contains(document.activeElement)) {
-        var btn = $('.win-btn', win);
-        if (btn) btn.click();
+      } else if (e.key === 'Escape') {
+        if (dialog && dialog.open && typeof dialog.close === 'function') {
+          dialog.close();
+        } else if (body && !body.hidden && win && win.contains(document.activeElement)) {
+          var btn = $('.win-btn', win);
+          if (btn) btn.click();
+        }
       }
     });
 
