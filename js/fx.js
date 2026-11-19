@@ -811,6 +811,7 @@
 
   PIP.fx = {
     confetti: confetti,
+    spawnSparkle: spawnSparkle,
     createNoteElement: createNoteElement,
     formatWishesText: formatWishesText,
     exportWishes: exportWishes,
