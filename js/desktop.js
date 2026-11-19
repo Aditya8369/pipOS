@@ -2,9 +2,54 @@
 (function () {
   'use strict';
   var PIP = (typeof window !== 'undefined' && window.PIP) ? window.PIP : {};
-  var $ = PIP.$ || function (sel) { return document.querySelector(sel); };
-  var $$ = PIP.$$ || function (sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+  var $ = PIP.$ || function (sel) { return (typeof document !== 'undefined') ? document.querySelector(sel) : null; };
+  var $$ = PIP.$$ || function (sel) { return (typeof document !== 'undefined') ? Array.prototype.slice.call(document.querySelectorAll(sel)) : []; };
   var toast = PIP.toast || function () {};
+
+  function getStore() {
+    if (typeof window !== 'undefined' && window.PIP && window.PIP.store) {
+      return window.PIP.store;
+    }
+    if (typeof PIP !== 'undefined' && PIP.store) {
+      return PIP.store;
+    }
+    return {
+      get: function (k, d) { try { return (typeof localStorage !== 'undefined' && localStorage.getItem(k)) || d; } catch (e) { return d; } },
+      set: function (k, v) { try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch (e) {} }
+    };
+  }
+
+  var autoSnap = false;
+
+  function isAutoSnap() {
+    var s = getStore();
+    var val = s.get('auto_snap', 'false');
+    return val === 'true' || val === true;
+  }
+
+  function updateAutoSnapUI() {
+    var btn = $('#cmAutoSnap');
+    if (!btn && contextMenu) {
+      var items = contextMenu.querySelectorAll('button');
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].textContent && items[i].textContent.indexOf('Auto-Snap') !== -1) {
+          btn = items[i];
+          break;
+        }
+      }
+    }
+    if (btn) {
+      btn.textContent = autoSnap ? '🧲 Auto-Snap: On' : '🧲 Auto-Snap: Off';
+    }
+  }
+
+  function setAutoSnap(isSnap) {
+    autoSnap = !!isSnap;
+    var s = getStore();
+    s.set('auto_snap', isSnap);
+    updateAutoSnapUI();
+    return autoSnap;
+  }
 
   var GRID_SIZE = 84;
   var MARGIN_X = 16;
@@ -71,7 +116,7 @@
     var vw = (typeof window !== 'undefined') ? window.innerWidth : 1024;
     var vh = (typeof window !== 'undefined') ? window.innerHeight : 768;
     var menuW = 190;
-    var menuH = 160;
+    var menuH = 200;
 
     var posX = Math.min(x, vw - menuW - 12);
     var posY = Math.min(y, vh - menuH - 12);
@@ -91,9 +136,108 @@
     }
   }
 
+  function initIconDrag() {
+    if (typeof document === 'undefined') return;
+    var icons = $$('.desk-icons > *');
+    if (!icons.length) return;
+
+    icons.forEach(function (icon) {
+      if (icon._hasDragHandler) return;
+      icon._hasDragHandler = true;
+
+      var isDragging = false;
+      var hasMoved = false;
+      var startPointerX = 0;
+      var startPointerY = 0;
+      var startX = 0;
+      var startY = 0;
+      var curX = 0;
+      var curY = 0;
+
+      if (icon.dataset && icon.dataset.x !== undefined) {
+        curX = parseFloat(icon.dataset.x) || 0;
+        curY = parseFloat(icon.dataset.y) || 0;
+      }
+
+      icon.addEventListener('pointerdown', function (e) {
+        if (e.button && e.button !== 0) return;
+        isDragging = true;
+        hasMoved = false;
+        startPointerX = e.clientX;
+        startPointerY = e.clientY;
+        startX = e.clientX - curX;
+        startY = e.clientY - curY;
+
+        try { icon.setPointerCapture(e.pointerId); } catch (err) {}
+        icon.style.transition = 'none';
+      });
+
+      icon.addEventListener('pointermove', function (e) {
+        if (!isDragging) return;
+        var dx = e.clientX - startPointerX;
+        var dy = e.clientY - startPointerY;
+
+        if (!hasMoved && Math.hypot(dx, dy) > 4) {
+          hasMoved = true;
+          icon.classList.add('is-dragging');
+        }
+
+        if (hasMoved) {
+          curX = e.clientX - startX;
+          curY = e.clientY - startY;
+          icon.style.transform = 'translate3d(' + curX + 'px, ' + curY + 'px, 0)';
+        }
+      });
+
+      function onPointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        try { icon.releasePointerCapture(e.pointerId); } catch (err) {}
+        icon.classList.remove('is-dragging');
+
+        if (hasMoved) {
+          var preventClick = function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            icon.removeEventListener('click', preventClick, true);
+          };
+          icon.addEventListener('click', preventClick, true);
+          setTimeout(function () {
+            icon.removeEventListener('click', preventClick, true);
+          }, 100);
+        }
+
+        var x = curX;
+        var y = curY;
+
+        if (autoSnap || isAutoSnap()) {
+          x = Math.round(x / 80) * 80;
+          y = Math.round(y / 80) * 80;
+          icon.style.transition = 'transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1)';
+        } else {
+          icon.style.transition = '';
+        }
+
+        curX = x;
+        curY = y;
+        icon.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0)';
+        if (icon.dataset) {
+          icon.dataset.x = x;
+          icon.dataset.y = y;
+        }
+      }
+
+      icon.addEventListener('pointerup', onPointerUp);
+      icon.addEventListener('pointercancel', onPointerUp);
+    });
+  }
+
   function initDesktop() {
     if (typeof document === 'undefined') return;
     contextMenu = $('#desktopContextMenu');
+
+    autoSnap = isAutoSnap();
+    updateAutoSnapUI();
 
     // Right-click on desktop background
     document.addEventListener('contextmenu', function (e) {
@@ -124,6 +268,16 @@
       arrangeBtn.addEventListener('click', function () {
         hideContextMenu();
         toast('Icons arranged to grid');
+      });
+    }
+
+    var autoSnapBtn = $('#cmAutoSnap');
+    if (autoSnapBtn) {
+      autoSnapBtn.addEventListener('click', function () {
+        var isSnap = !autoSnap;
+        setAutoSnap(isSnap);
+        hideContextMenu();
+        toast(isSnap ? 'Auto-Snap enabled' : 'Auto-Snap disabled');
       });
     }
 
@@ -158,6 +312,8 @@
         }
       });
     }
+
+    initIconDrag();
   }
 
   if (typeof document !== 'undefined') {
@@ -175,7 +331,11 @@
     isBoxIntersecting: isBoxIntersecting,
     showContextMenu: showContextMenu,
     hideContextMenu: hideContextMenu,
-    GRID_SIZE: GRID_SIZE
+    GRID_SIZE: GRID_SIZE,
+    isAutoSnap: isAutoSnap,
+    setAutoSnap: setAutoSnap,
+    initIconDrag: initIconDrag,
+    init: initDesktop
   };
 
   if (typeof module !== 'undefined' && module.exports) {
