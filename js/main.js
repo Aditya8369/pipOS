@@ -518,14 +518,34 @@
   function initTrash() {
     var t = $('#trashBtn');
     if (!t) return;
-    var lines = [
-      'Nightmares is empty. It has always been empty.',
-      'Pip checked twice. Still empty.',
-      'Only a single spare sock in there.'
-    ];
-    var i = 0;
     t.addEventListener('click', function () {
-      toast(lines[i++ % lines.length]);
+      if (audio && typeof audio.note === 'function') {
+        audio.note(1046, { dur: 0.8, gain: 0.15 });
+      }
+      if (t.classList) {
+        t.classList.add('is-bursting');
+        setTimeout(function () { t.classList.remove('is-bursting'); }, 500);
+      }
+      var rect = (typeof t.getBoundingClientRect === 'function') ? t.getBoundingClientRect() : null;
+      var cx = rect ? (rect.left + rect.width / 2) : 60;
+      var cy = rect ? (rect.top + rect.height / 2) : 100;
+      for (var p = 0; p < 10; p++) {
+        var angle = (p / 10) * Math.PI * 2;
+        var speed = 2 + (p % 3);
+        var vx = Math.cos(angle) * speed;
+        var vy = Math.sin(angle) * speed;
+        if (PIP.fx && PIP.fx.particles && typeof PIP.fx.particles.spawn === 'function') {
+          PIP.fx.particles.spawn(cx, cy, { vx: vx, vy: vy, glyph: '✦', size: 10 });
+        } else if (PIP.fx && typeof PIP.fx.spawnSparkle === 'function') {
+          PIP.fx.spawnSparkle(cx, cy, { vx: vx, vy: vy, glyph: '✦', size: 10 });
+        }
+      }
+      toast('✨ All nightmares cleared. Sweet dreams only!');
+      if (PIP.stickers && typeof PIP.stickers.unlock === 'function') {
+        if (!PIP.stickers.unlock('trash')) {
+          PIP.stickers.unlock('route7');
+        }
+      }
     });
   }
 

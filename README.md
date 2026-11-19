@@ -525,10 +525,7 @@ Pip's operating system contains hidden secrets tucked into corners of the deskto
    - Pip wakes up with wide, delighted eyes, giggles, triggers a full-screen colorful confetti burst, and opens `secret-lullaby.exe`:  
      > *"shh... the best dreams are the ones you say out loud. sweet dreams, curious one."*
 2. **The "Nightmares" Trash Can:**
-   - Clicking the `#trashBtn` desktop shortcut launches a comforting toast notification reminding visitors:
-     - *"Nightmares is empty. It has always been empty."*
-     - *"Pip checked twice. Still empty."*
-     - *"Only a single spare sock in there."*
+   - Clicking the `#trashBtn` desktop shortcut empties nightmares with a high pentatonic chime (`audio.note(1046, { dur: 0.8, gain: 0.15 })`), bursts 10 mini starlight particles across the desktop, displays the comforting toast *"✨ All nightmares cleared. Sweet dreams only!"*, and unlocks an achievement sticker.
 3. **Visitor Memory:**
    - Pip recognizes returning visitors! The system saves your visit count and optional name in `localStorage`.
    - On repeat visits, Pip greets you personally in the hero speech bubble:  
