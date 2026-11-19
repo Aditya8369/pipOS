@@ -614,11 +614,53 @@
     }
   }
 
+  /* ---------- CRT Scanline & Phosphor Bloom ---------- */
+  function initCrt() {
+    function setCrt(enable) {
+      store.set('crt_mode', enable ? 'true' : 'false');
+      if (document.body) {
+        document.body.classList.toggle('crt-active', !!enable);
+      }
+    }
+
+    var isCrt = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+    if (isCrt && document.body) {
+      document.body.classList.add('crt-active');
+    }
+
+    document.addEventListener('pip-crt-toggle', function (e) {
+      var next;
+      if (e && e.detail && typeof e.detail.active === 'boolean') {
+        next = e.detail.active;
+      } else {
+        var cur = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+        next = !cur;
+      }
+      setCrt(next);
+    });
+
+    var crtBtn = $('#crtBtn');
+    if (crtBtn) {
+      crtBtn.addEventListener('click', function () {
+        var cur = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+        setCrt(!cur);
+      });
+    }
+
+    if (PIP) {
+      PIP.setCrt = setCrt;
+      PIP.isCrt = function () {
+        return store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+      };
+    }
+  }
+
   /* ---------- go ---------- */
   safe('images', PIP.optionalImages);
   safe('i18n', PIP.i18n ? PIP.i18n.init : function () {});
   safe('pip', PIP.pip.init);
   safe('theme', initTheme);
+  safe('crt', initCrt);
   safe('sound', initSound);
     safe('share', initShare);
   safe('quiet', initQuiet);

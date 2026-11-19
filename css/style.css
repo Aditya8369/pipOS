@@ -3389,7 +3389,6 @@ dialog.shortcuts-hud,
 }
 
 /* 
-==================================================================
    PWA 2.0 Install Banner
    ========================================================================== */
 .pwa-install-banner {
@@ -4240,7 +4239,6 @@ dialog.shortcuts-hud,
 [data-theme="night"] .sky-lore {
   color: #fff;
   background: rgba(243, 181, 98, 0.18);
-=======
 /* Zero-inline utility classes */
 .sr-hidden-svg {
   position: absolute;
