@@ -2969,6 +2969,107 @@ dialog.secret::backdrop { background: rgba(40, 24, 40, 0.55); }
   background: var(--paper);
 }
 
+/* Note Paper Pastel Color Tint Picker */
+.note-tint-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.note-tint-bar .swatch-btn,
+.note-tint-bar .tint-btn {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  cursor: pointer;
+  padding: 0;
+  outline-offset: 2px;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.note-tint-bar .swatch-btn:hover,
+.note-tint-bar .tint-btn:hover {
+  transform: scale(1.18);
+}
+
+.note-tint-bar .swatch-btn.is-active,
+.note-tint-bar .tint-btn.is-active {
+  box-shadow: 0 0 0 2px var(--focus);
+  transform: scale(1.18);
+}
+
+.swatch-btn[data-tint="default"],
+.tint-btn[data-tint="default"] {
+  background: #fffdf9;
+}
+
+.swatch-btn[data-tint="mint"],
+.tint-btn[data-tint="mint"] {
+  background: #cfeadb;
+}
+
+.swatch-btn[data-tint="buttercup"],
+.tint-btn[data-tint="buttercup"] {
+  background: #ffe9ae;
+}
+
+.swatch-btn[data-tint="peach"],
+.tint-btn[data-tint="peach"] {
+  background: #fde8df;
+}
+
+/* Pastel Tint Presets (altering --paper background and border tones) */
+[data-tint="mint"],
+#notes[data-tint="mint"],
+.w-notes[data-tint="mint"] {
+  --paper: #edf7f1;
+  --cream: #f4fbf7;
+  --line: #427258;
+}
+
+[data-tint="buttercup"],
+#notes[data-tint="buttercup"],
+.w-notes[data-tint="buttercup"] {
+  --paper: #fef7de;
+  --cream: #fffbe9;
+  --line: #7c6426;
+}
+
+[data-tint="peach"],
+#notes[data-tint="peach"],
+.w-notes[data-tint="peach"] {
+  --paper: #fde8df;
+  --cream: #fef2eb;
+  --line: #88523f;
+}
+
+[data-theme="night"] [data-tint="mint"],
+[data-theme="night"] #notes[data-tint="mint"],
+[data-theme="night"] .w-notes[data-tint="mint"] {
+  --paper: #1c2b24;
+  --cream: #14201a;
+  --line: #52896b;
+}
+
+[data-theme="night"] [data-tint="buttercup"],
+[data-theme="night"] #notes[data-tint="buttercup"],
+[data-theme="night"] .w-notes[data-tint="buttercup"] {
+  --paper: #2b2718;
+  --cream: #201d12;
+  --line: #9c7f35;
+}
+
+[data-theme="night"] [data-tint="peach"],
+[data-theme="night"] #notes[data-tint="peach"],
+[data-theme="night"] .w-notes[data-tint="peach"] {
+  --paper: #2d1f1c;
+  --cream: #221614;
+  --line: #a66a56;
+}
+
 .notes-toolbar {
   display: flex;
   justify-content: space-between;
