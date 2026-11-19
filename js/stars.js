@@ -5,7 +5,7 @@
   var PIP = root.PIP = root.PIP || {};
   var store = PIP.store || {
     get: function (k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } },
-    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
   };
 
   var STARS_CONFIG = {
@@ -71,6 +71,8 @@
 
     var state = {
       running: false,
+      paused: false,
+      gameOver: false,
       visible: true,
       score: 0,
       best: parseInt(store.get('pip_stars_best', '0'), 10) || 0,
@@ -85,7 +87,8 @@
         h: STARS_CONFIG.CLOUD_H,
         targetX: (W - STARS_CONFIG.CLOUD_W) / 2,
         wideUntil: 0,
-        isWide: false
+        isWide: false,
+        remainingWideTime: 0
       },
       keys: { left: false, right: false },
       lastSpawn: 0,
@@ -287,6 +290,8 @@
 
     function triggerGameOver() {
       state.running = false;
+      state.paused = false;
+      state.gameOver = true;
       if (state.score > state.best) {
         state.best = state.score;
         store.set('pip_stars_best', String(state.best));
@@ -468,7 +473,10 @@
       state.cloud.w = STARS_CONFIG.CLOUD_W;
       state.cloud.wideUntil = 0;
       state.cloud.isWide = false;
+      state.cloud.remainingWideTime = 0;
       state.running = true;
+      state.paused = false;
+      state.gameOver = false;
       state.lastSpawn = Date.now();
       updateStatsUI();
 
@@ -482,7 +490,15 @@
     }
 
     function pauseGame() {
+      if (!state.running || state.gameOver) return;
       state.running = false;
+      state.paused = true;
+      var now = Date.now();
+      if (state.cloud.wideUntil && state.cloud.wideUntil > now) {
+        state.cloud.remainingWideTime = state.cloud.wideUntil - now;
+      } else {
+        state.cloud.remainingWideTime = 0;
+      }
       cancelAnimationFrame(state.rafId);
       if (actionBtn) {
         actionBtn.textContent = 'Resume Game';
@@ -491,11 +507,30 @@
       render();
     }
 
+    function resumeGame() {
+      if (state.running || !state.paused || state.gameOver) return;
+      state.running = true;
+      state.paused = false;
+      state.lastSpawn = Date.now();
+      if (state.cloud.remainingWideTime > 0) {
+        state.cloud.wideUntil = Date.now() + state.cloud.remainingWideTime;
+        state.cloud.remainingWideTime = 0;
+      }
+      if (actionBtn) {
+        actionBtn.textContent = 'Pause Game';
+        actionBtn.setAttribute('aria-label', 'Pause Catch the Falling Stars game');
+      }
+      cancelAnimationFrame(state.rafId);
+      state.rafId = requestAnimationFrame(loop);
+    }
+
     // Event Listeners
     if (actionBtn) {
       actionBtn.addEventListener('click', function () {
         if (state.running) {
           pauseGame();
+        } else if (state.paused) {
+          resumeGame();
         } else {
           startGame();
         }
@@ -543,8 +578,13 @@
         state.keys.right = true;
         e.preventDefault();
       } else if (e.key === ' ' || e.key === 'Enter') {
-        if (!state.running) startGame();
-        else pauseGame();
+        if (state.running) {
+          pauseGame();
+        } else if (state.paused) {
+          resumeGame();
+        } else {
+          startGame();
+        }
         e.preventDefault();
       }
     });
@@ -574,6 +614,7 @@
       state: state,
       startGame: startGame,
       pauseGame: pauseGame,
+      resumeGame: resumeGame,
       triggerGameOver: triggerGameOver,
       spawnStar: spawnStar,
       spawnParticles: spawnParticles,
