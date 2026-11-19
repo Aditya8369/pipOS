@@ -42,6 +42,7 @@ var PRECACHE_ASSETS = [
   'js/contrast.js',
   'js/scope.js',
   'js/dimmer.js',
+  'js/a11y-earcons.js',
 
   'js/bubbles.js',
   'js/main.js',
