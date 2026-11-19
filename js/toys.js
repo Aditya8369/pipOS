@@ -856,16 +856,9 @@
     function drop() {
       if (!st) { reset(); return; }
       if (st.over) { reset(); return; }
-      if (!st.cur || typeof st.cur.x !== 'number' || isNaN(st.cur.x)) {
-        spawn();
-        ensureLoop();
-        return;
-      }
+      if (!st.cur) return;
       var top = (st.stack && st.stack.length) ? st.stack[st.stack.length - 1] : null;
-      if (!top || typeof top.x !== 'number' || isNaN(top.x) || typeof top.w !== 'number' || isNaN(top.w)) {
-        reset();
-        return;
-      }
+      if (!top) return;
       var c = st.cur;
       var left = Math.max(c.x, top.x), right = Math.min(c.x + c.w, top.x + top.w), ov = right - left;
       if (isNaN(ov) || ov < 3) {
