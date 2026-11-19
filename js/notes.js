@@ -130,6 +130,49 @@
     };
   }
 
+  function getStore() {
+    if (typeof window !== 'undefined' && window.PIP && window.PIP.store) return window.PIP.store;
+    if (typeof global !== 'undefined' && global.PIP && global.PIP.store) return global.PIP.store;
+    return (PIP && PIP.store) ? PIP.store : store;
+  }
+
+  var currentTint = getStore().get('notes_tint', 'default');
+
+  function setTint(tint) {
+    tint = tint || 'default';
+    currentTint = tint;
+    getStore().set('notes_tint', tint);
+    var notesEl = typeof document !== 'undefined'
+      ? (document.getElementById('notes') || (typeof document.querySelector === 'function' ? document.querySelector('#notes') : null))
+      : null;
+    if (notesEl && typeof notesEl.setAttribute === 'function') {
+      notesEl.setAttribute('data-tint', tint);
+    }
+    var swatchBtns = typeof document !== 'undefined' && typeof document.querySelectorAll === 'function'
+      ? document.querySelectorAll('#notes .note-tint-bar button, .note-tint-bar button')
+      : [];
+    if (swatchBtns && swatchBtns.length) {
+      for (var i = 0; i < swatchBtns.length; i++) {
+        var btn = swatchBtns[i];
+        var bTint = btn.getAttribute ? btn.getAttribute('data-tint') : null;
+        if (btn.classList) {
+          if (bTint === tint) {
+            btn.classList.add('is-active');
+            if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-pressed', 'true');
+          } else {
+            btn.classList.remove('is-active');
+            if (typeof btn.setAttribute === 'function') btn.setAttribute('aria-pressed', 'false');
+          }
+        }
+      }
+    }
+    return tint;
+  }
+
+  function getTint() {
+    return getStore().get('notes_tint', currentTint || 'default');
+  }
+
   function initNotes() {
     var win = $('#notes');
     if (!win) return;
@@ -144,8 +187,19 @@
     var exportBtn = $('#notesExportBtn');
     var templateSelect = $('#notesTemplateSelect');
     var clearBtn = $('#notesClearBtn');
+    var swatchBtns = $$('#notes .note-tint-bar button, .note-tint-bar button');
 
     if (!editor || !preview) return;
+
+    setTint(currentTint);
+
+    swatchBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var t = btn.getAttribute('data-tint') || 'default';
+        setTint(t);
+        if (audio.isOn()) audio.pop();
+      });
+    });
 
     var saved = store.get(STORAGE_KEY, '');
     var currentContent = saved || DEFAULT_NOTE;
@@ -281,6 +335,8 @@
     sanitizeHtml: sanitizeHtml,
     countMetrics: countMetrics,
     exportNote: exportNote,
+    setTint: setTint,
+    getTint: getTint,
     TEMPLATES: TEMPLATES,
     STORAGE_KEY: STORAGE_KEY
   };
