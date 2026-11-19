@@ -344,6 +344,72 @@
     });
   }
 
+  /* ---------- Random Dream Shuffler (Surprise Dream) ---------- */
+  function surpriseDream(rootDoc) {
+    var doc = rootDoc || (typeof document !== 'undefined' ? document : null);
+    if (!doc || typeof doc.querySelectorAll !== 'function') return null;
+    var notes = doc.querySelectorAll('.note');
+    if (!notes || notes.length === 0) return null;
+
+    var randomIndex = Math.floor(Math.random() * notes.length);
+    var selectedNote = notes[randomIndex];
+    if (!selectedNote) return null;
+
+    // Clear .is-highlighted from any previously selected notes
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].classList && typeof notes[i].classList.remove === 'function') {
+        notes[i].classList.remove('is-highlighted');
+      }
+    }
+
+    // Scroll selected dream into view centered smoothly
+    if (typeof selectedNote.scrollIntoView === 'function') {
+      selectedNote.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Add .is-highlighted pulse CSS animation for 2.5s
+    if (selectedNote.classList && typeof selectedNote.classList.add === 'function') {
+      selectedNote.classList.add('is-highlighted');
+    }
+
+    setTimeout(function () {
+      if (selectedNote && selectedNote.classList && typeof selectedNote.classList.remove === 'function') {
+        selectedNote.classList.remove('is-highlighted');
+      }
+    }, 2500);
+
+    // Trigger PIP.fx.confetti(note)
+    var fx = (typeof window !== 'undefined' && window.PIP && window.PIP.fx) ||
+             (typeof global !== 'undefined' && global.PIP && global.PIP.fx);
+    if (fx && typeof fx.confetti === 'function') {
+      fx.confetti(selectedNote);
+    }
+
+    return selectedNote;
+  }
+
+  function initShuffle(rootDoc) {
+    var doc = rootDoc || (typeof document !== 'undefined' ? document : null);
+    if (!doc || typeof doc.getElementById !== 'function') return;
+    var shuffleBtn = doc.getElementById('gbShuffle');
+    if (shuffleBtn && !shuffleBtn._hasShuffleHandler) {
+      shuffleBtn._hasShuffleHandler = true;
+      shuffleBtn.addEventListener('click', function () {
+        surpriseDream(doc);
+      });
+    }
+  }
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        initShuffle(document);
+      });
+    } else {
+      initShuffle(document);
+    }
+  }
+
   var wallModule = {
     sanitize: sanitize,
     validateWish: validateWish,
@@ -356,6 +422,9 @@
     queuePendingWish: queuePendingWish,
     clearPendingWishes: clearPendingWishes,
     syncPendingWishes: syncPendingWishes,
+    surpriseDream: surpriseDream,
+    pickRandomDream: surpriseDream,
+    initShuffle: initShuffle,
     COOLDOWN_MS: COOLDOWN_MS,
     WINDOW_MS: WINDOW_MS,
     MAX_PER_WINDOW: MAX_PER_WINDOW
