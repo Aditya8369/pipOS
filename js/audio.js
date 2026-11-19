@@ -12,9 +12,12 @@
   var BASS = [261.63, 196.0, 220.0, 174.61];
 
   var ctx = null, master = null, reverbIn = null;
+  var limiter = null, wetGain = null, convNode = null;
   var state = store.get('sound', '');
   var currentVolume = parseFloat(store.get('volume', '0.7'));
   if (isNaN(currentVolume) || currentVolume < 0 || currentVolume > 1) currentVolume = 0.7;
+  var reverbWetLevel = parseFloat(store.get('reverbWet', '0.28'));
+  if (isNaN(reverbWetLevel) || reverbWetLevel < 0 || reverbWetLevel > 1) reverbWetLevel = 0.28;
   var endlessTimer = 0;
   var listeners = [];
 
@@ -41,9 +44,39 @@
     return currentVolume;
   }
 
+  function configureLimiter(opts) {
+    if (!limiter || !ctx) return;
+    opts = opts || {};
+    var t = ctx.currentTime;
+    if (typeof opts.threshold === 'number') limiter.threshold.setValueAtTime(clamp(opts.threshold, -60, 0), t);
+    if (typeof opts.knee === 'number') limiter.knee.setValueAtTime(clamp(opts.knee, 0, 40), t);
+    if (typeof opts.ratio === 'number') limiter.ratio.setValueAtTime(clamp(opts.ratio, 1, 20), t);
+    if (typeof opts.attack === 'number') limiter.attack.setValueAtTime(clamp(opts.attack, 0.0001, 1), t);
+    if (typeof opts.release === 'number') limiter.release.setValueAtTime(clamp(opts.release, 0.01, 1), t);
+  }
+
+  function setReverbWet(val) {
+    reverbWetLevel = clamp(parseFloat(val), 0, 1);
+    store.set('reverbWet', reverbWetLevel);
+    if (wetGain && ctx) {
+      wetGain.gain.setValueAtTime(reverbWetLevel, ctx.currentTime);
+    }
+  }
+
+  function getReverbWet() {
+    return reverbWetLevel;
+  }
+
   function makeImpulse(c, seconds, decay) {
-    var rate = c.sampleRate, len = Math.floor(rate * seconds);
-    var buf = c.createBuffer(2, len, rate);
+    var rate = (c && c.sampleRate) || 44100;
+    var len = Math.max(1, Math.floor(rate * (seconds || 2.2)));
+    decay = typeof decay === 'number' ? decay : 3;
+    var buf = (c && c.createBuffer) ? c.createBuffer(2, len, rate) : {
+      numberOfChannels: 2,
+      length: len,
+      sampleRate: rate,
+      getChannelData: function () { return new Float32Array(len); }
+    };
     for (var ch = 0; ch < 2; ch++) {
       var d = buf.getChannelData(ch);
       for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
@@ -59,16 +92,23 @@
       try { ctx = new AC(); } catch (e) { ctx = null; return false; }
       master = ctx.createGain();
       master.gain.value = currentVolume;
-      var comp = ctx.createDynamicsCompressor();
-      master.connect(comp);
-      comp.connect(ctx.destination);
-      var conv = ctx.createConvolver();
-      conv.buffer = makeImpulse(ctx, 2.2, 3);
-      var wet = ctx.createGain();
-      wet.gain.value = 0.28;
-      conv.connect(wet);
-      wet.connect(master);
-      reverbIn = conv;
+      limiter = ctx.createDynamicsCompressor();
+      if (limiter.threshold) limiter.threshold.value = -2.5;
+      if (limiter.knee) limiter.knee.value = 0;
+      if (limiter.ratio) limiter.ratio.value = 20.0;
+      if (limiter.attack) limiter.attack.value = 0.002;
+      if (limiter.release) limiter.release.value = 0.1;
+
+      master.connect(limiter);
+      limiter.connect(ctx.destination);
+
+      convNode = ctx.createConvolver();
+      convNode.buffer = makeImpulse(ctx, 2.2, 3);
+      wetGain = ctx.createGain();
+      wetGain.gain.value = reverbWetLevel;
+      convNode.connect(wetGain);
+      wetGain.connect(master);
+      reverbIn = convNode;
     }
     if (ctx.state === 'suspended') ctx.resume();
     return true;
@@ -195,11 +235,11 @@
       }
       if (beat % 8 === 0) note(BASS[(beat / 8) % 4], { dur: 3.2, gain: 0.13, type: 'triangle', bell: false });
       beat++;
-      endlessTimer = window.setTimeout(step, 480 + Math.random() * 180);
+      endlessTimer = setTimeout(step, 480 + Math.random() * 180);
     })();
     return true;
   }
-  function stopEndless() { window.clearTimeout(endlessTimer); endlessTimer = 0; }
+  function stopEndless() { clearTimeout(endlessTimer); endlessTimer = 0; }
   function isEndless() { return endlessTimer !== 0; }
 
   function emit() { listeners.forEach(function (fn) { fn(state); }); }
@@ -333,7 +373,7 @@
     (function loop() {
       if (!cricketsActive || !isOn()) return;
       chirpCricket();
-      cricketTimer = window.setTimeout(loop, 1800 + Math.random() * 1600);
+      cricketTimer = setTimeout(loop, 1800 + Math.random() * 1600);
     })();
     return true;
   }
@@ -341,7 +381,7 @@
   function stopCrickets() {
     cricketsActive = false;
     if (cricketTimer) {
-      window.clearTimeout(cricketTimer);
+      clearTimeout(cricketTimer);
       cricketTimer = 0;
     }
   }
@@ -438,6 +478,133 @@
     });
   }
 
+  /* =========================================================================
+     Bedtime Sleep Timer with Gradual Audio Fade-out
+     ========================================================================= */
+  var sleepTimerId = null;
+  var sleepTimerEndTime = 0;
+  var sleepTimerDurationSec = 0;
+  var sleepTimerInitialVolume = 0.7;
+
+  function stopSleepTimer() {
+    if (sleepTimerId) {
+      clearInterval(sleepTimerId);
+      sleepTimerId = null;
+    }
+    sleepTimerEndTime = 0;
+    sleepTimerDurationSec = 0;
+  }
+
+  function isSleepTimerActive() {
+    return sleepTimerId !== null && sleepTimerEndTime > Date.now();
+  }
+
+  function getSleepTimerRemaining() {
+    if (!sleepTimerId || !sleepTimerEndTime) return 0;
+    return Math.max(0, Math.ceil((sleepTimerEndTime - Date.now()) / 1000));
+  }
+
+  function getPIP() {
+    if (typeof window !== 'undefined' && window.PIP) return window.PIP;
+    if (typeof global !== 'undefined' && global.PIP) return global.PIP;
+    return PIP;
+  }
+
+  function setNightTheme() {
+    var p = getPIP();
+    var curStore = (p && p.store) || store;
+    if (curStore && curStore.set) {
+      curStore.set('theme', 'night');
+      curStore.set('themeMode', 'night');
+    }
+    var d = (typeof document !== 'undefined') ? document : ((typeof global !== 'undefined' && global.document) ? global.document : null);
+    if (d && d.documentElement) {
+      d.documentElement.setAttribute('data-theme', 'night');
+      d.documentElement.setAttribute('data-theme-mode', 'night');
+      var themeBtn = d.getElementById ? d.getElementById('themeBtn') : null;
+      var themeLabel = d.getElementById ? d.getElementById('themeLabel') : null;
+      if (themeLabel) themeLabel.textContent = 'Night';
+      if (themeBtn) {
+        themeBtn.setAttribute('aria-label', 'Night mode, switch to Auto mode');
+        if (themeBtn.classList) {
+          themeBtn.classList.remove('is-auto');
+          themeBtn.classList.add('is-night');
+        }
+      }
+    }
+    if (p && p.pip && typeof p.pip.setMood === 'function') {
+      p.pip.setMood('night');
+    }
+  }
+
+  function stopAll() {
+    stopSleepTimer();
+    stopEndless();
+    stopAmbient();
+    set('off');
+    var gainNode = master;
+    if (gainNode && ctx) {
+      try {
+        gainNode.gain.setValueAtTime(currentVolume, ctx.currentTime);
+      } catch (e) {}
+    }
+  }
+
+  function startSleepTimer(minutes, onFinish) {
+    stopSleepTimer();
+    var mins = 15;
+    var cb = onFinish;
+    if (typeof minutes === 'number') {
+      mins = minutes;
+    } else if (typeof minutes === 'string') {
+      mins = parseFloat(minutes);
+      if (isNaN(mins) || mins <= 0) mins = 15;
+    } else if (minutes && typeof minutes === 'object') {
+      mins = typeof minutes.minutes === 'number' ? minutes.minutes : 15;
+      if (typeof minutes.onFinish === 'function') cb = minutes.onFinish;
+    }
+    if (isNaN(mins) || mins <= 0) mins = 15;
+
+    var totalSeconds = mins < 0.05 ? mins * 60 : Math.max(1, Math.round(mins * 60));
+    sleepTimerDurationSec = totalSeconds;
+    sleepTimerInitialVolume = currentVolume > 0 ? currentVolume : 0.7;
+    sleepTimerEndTime = Date.now() + totalSeconds * 1000;
+
+    var intervalMs = mins < 0.05 ? 50 : 250;
+    sleepTimerId = setInterval(function () {
+      var remainingMs = sleepTimerEndTime - Date.now();
+      var remainingSec = Math.max(0, remainingMs / 1000);
+
+      // During the final 60 seconds, decrement master gain exponentially towards zero using gainNode.gain.setValueAtTime()
+      if (remainingSec <= 60 && remainingSec > 0) {
+        var gainNode = master;
+        if (gainNode && ctx) {
+          try {
+            var factor = Math.max(0.0001, Math.pow(remainingSec / Math.min(60, totalSeconds), 2));
+            var targetGain = sleepTimerInitialVolume * factor;
+            gainNode.gain.setValueAtTime(targetGain, ctx.currentTime);
+          } catch (e) {}
+        }
+      }
+
+      if (remainingSec <= 0) {
+        stopSleepTimer();
+        stopAll();
+        setNightTheme();
+        var p = getPIP();
+        var showToast = (p && p.toast) || toast;
+        if (typeof showToast === 'function') {
+          showToast('Pip fell fast asleep. Sweet dreams!');
+        }
+        if (typeof cb === 'function') {
+          cb();
+        }
+      }
+    }, intervalMs);
+
+    return totalSeconds;
+  }
+
   // The speaker switch in the taskbar
   function toggle() {
     if (isOn()) { set('off'); return; }
@@ -493,7 +660,26 @@
     isWindActive: isWindActive,
     stopAmbient: stopAmbient,
     setAmbientLevel: setAmbientLevel,
-    getAmbientLevel: getAmbientLevel
+    getAmbientLevel: getAmbientLevel,
+    configureLimiter: configureLimiter,
+    setReverbWet: setReverbWet,
+    getReverbWet: getReverbWet,
+    makeImpulse: makeImpulse,
+    stopAll: stopAll,
+    startSleepTimer: startSleepTimer,
+    stopSleepTimer: stopSleepTimer,
+    getSleepTimerRemaining: getSleepTimerRemaining,
+    isSleepTimerActive: isSleepTimerActive,
+    setNightTheme: setNightTheme,
+    masterBus: {
+      configureLimiter: configureLimiter,
+      setReverbWet: setReverbWet,
+      getReverbWet: getReverbWet,
+      makeImpulse: makeImpulse,
+      getMasterNodes: function () {
+        return { master: master, limiter: limiter, convolver: convNode, wet: wetGain };
+      }
+    }
   };
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -509,7 +695,17 @@
       stopWind: stopWind,
       isWindActive: isWindActive,
       note: note,
-      pad: pad
+      pad: pad,
+      configureLimiter: configureLimiter,
+      setReverbWet: setReverbWet,
+      getReverbWet: getReverbWet,
+      makeImpulse: makeImpulse,
+      stopAll: stopAll,
+      startSleepTimer: startSleepTimer,
+      stopSleepTimer: stopSleepTimer,
+      getSleepTimerRemaining: getSleepTimerRemaining,
+      isSleepTimerActive: isSleepTimerActive,
+      setNightTheme: setNightTheme
     };
   }
 })();
