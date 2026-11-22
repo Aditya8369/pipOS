@@ -413,7 +413,7 @@
       label.textContent = lang === 'hi' ? 'हिन्दी' : 'EN';
     }
 
-    if (typeof document.dispatchEvent === 'function') {
+    if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
       try {
         var ev = (typeof CustomEvent === 'function')
           ? new CustomEvent('pip-language-change', { detail: { lang: lang } })
@@ -606,6 +606,7 @@
   if (hasWindow) {
     window.PIP = window.PIP || {};
     window.PIP.i18n = i18nModule;
+    window.PIP.t = t;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

@@ -44,12 +44,23 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Fredoka:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/boot.css">
   <script>document.documentElement.classList.add('js');</script>
 </head>
 
 <body>
   <a class="skip" href="#main">Skip to content</a>
-
+<div id="bootScreen" class="boot-screen" aria-hidden="true" role="none">
+ <div class="boot-panel">
+  <p class="boot-logo">✦ Pip OS</p>
+  <p class="boot-subtitle">Dream Delivery System</p>
+  <p class="boot-status">Starting Pip OS...</p>
+  <div class="boot-progress">
+    <div class="boot-progress-fill"></div>
+  </div>
+  <p class="boot-hint">Press any key or click to skip</p>
+</div>
+</div>
   <!-- shared star symbol -->
   <svg width="0" height="0" class="sr-hidden-svg" aria-hidden="true" focusable="false">
     <symbol id="star" viewBox="-10 -10 20 20">
@@ -108,6 +119,10 @@
       <button class="tb-btn" id="flashlightBtn" type="button" aria-pressed="false" aria-label="Night flashlight off, turn it on">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 2h6l1.5 5h-9zM8.5 7v13a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2V7zM10 11h4"/></svg>
         <span id="flashlightLabel">Lantern</span>
+      </button>
+            <button class="tb-btn" id="shareBtn" type="button" aria-label="Share Pip">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle class="globe" cx="6" cy="12" r="2.5" /><circle class="globe" cx="18" cy="6" r="2.5" /><circle class="globe" cx="18" cy="18" r="2.5" /><path class="globe" d="M8.2 11l7.6-4M8.2 13l7.6 4" /></svg>
+        <span id="shareLabel">Share</span>
       </button>
       <button class="tb-btn" id="themeBtn" type="button" aria-label="Day mode, switch to night mode">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -712,7 +727,7 @@
                 <span class="block-combo" id="blockCombo" aria-live="polite" hidden></span>
               </div>
             </div>
-            <div class="block-leaderboard" id="blockScores">
+            <div class="block-leaderboard">
               <span class="block-leaderboard-title">Top 5 Scores</span>
               <ol class="block-leaderboard-list" id="blockLeaderboardList" aria-label="Top 5 stacking heights">
                 <li class="block-leaderboard-empty">No scores yet &mdash; start stacking!</li>
@@ -1044,7 +1059,7 @@
             <div class="stars-canvas-wrap">
               <canvas id="starsCanvas" width="300" height="380" aria-label="Catch the Falling Stars canvas game"
                 tabindex="0"></canvas>
-              <div id="starsGameOver" class="stars-overlay hidden" hidden>
+              <div id="starsGameOver" class="stars-overlay hidden" aria-hidden="true" inert>
                 <div class="stars-modal">
                   <div class="stars-modal-icon" aria-hidden="true">🌙</div>
                   <h4 class="stars-modal-title">Dawn has arrived</h4>
@@ -1413,6 +1428,12 @@
         <article id="notes" class="win w-notes" data-foldable aria-labelledby="notesTitle">
           <div class="win-bar">
             <h3 class="win-title" id="notesTitle">pip-pad.exe</h3>
+            <div class="note-tint-bar" role="group" aria-label="Pastel color tint swatches">
+              <button type="button" class="swatch-btn tint-btn is-active" data-tint="default" aria-label="Default tint" title="Default"></button>
+              <button type="button" class="swatch-btn tint-btn" data-tint="mint" aria-label="Mint pastel tint" title="Mint"></button>
+              <button type="button" class="swatch-btn tint-btn" data-tint="buttercup" aria-label="Buttercup pastel tint" title="Buttercup"></button>
+              <button type="button" class="swatch-btn tint-btn" data-tint="peach" aria-label="Peach pastel tint" title="Peach"></button>
+            </div>
             <span class="win-hint" aria-hidden="true">[autosave: on]</span>
           </div>
           <div class="win-body">
@@ -1630,6 +1651,181 @@
             </div>
           </div>
         </article>
+
+        <!-- Unit & Measurement Converter (pip-converter) -->
+        <article id="converterWin" class="win w-converter" data-foldable aria-labelledby="converterTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="converterTitle">pip-converter.exe</h3>
+            <span class="converter-badge" aria-hidden="true">Calculations</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Unit &amp; Measurement Converter. Convert culinary cooking measures, temperatures, lengths, and weights.</p>
+            </div>
+            <div class="conv-category-wrap">
+              <label for="convCategory" class="conv-lbl">Category:</label>
+              <select id="convCategory" class="conv-select">
+                <option value="temp">🌡️ Temperature</option>
+                <option value="length">📏 Length &amp; Distance</option>
+                <option value="volume">🥣 Cooking &amp; Volume</option>
+                <option value="weight">⚖️ Weight &amp; Mass</option>
+              </select>
+            </div>
+
+            <div class="conv-grid">
+              <div class="conv-side">
+                <label for="convFromVal" class="conv-lbl">From:</label>
+                <input type="number" id="convFromVal" class="conv-input" value="100">
+                <select id="convFromUnit" class="conv-select" aria-label="From unit"></select>
+              </div>
+
+              <div class="conv-equal" aria-hidden="true">⇄</div>
+
+              <div class="conv-side">
+                <label for="convToVal" class="conv-lbl">To:</label>
+                <input type="number" id="convToVal" class="conv-input" readonly>
+                <select id="convToUnit" class="conv-select" aria-label="To unit"></select>
+              </div>
+            </div>
+
+            <div id="convFormula" class="conv-formula" role="status" aria-live="polite">100 C = 212 F</div>
+          </div>
+        </article>
+
+        <!-- Pip Interactive Soundboard (pip-soundboard.exe) -->
+        <article id="soundboardWin" class="win w-soundboard" data-foldable aria-labelledby="soundboardTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="soundboardTitle">pip-soundboard.exe</h3>
+            <span class="soundboard-badge" aria-hidden="true">Audio FX</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Voice Soundboard. Tap cards to synthesize Pip's bedtime yawns, chirps, giggles, and lullaby notes.</p>
+            </div>
+            <div id="soundboardGrid" class="soundboard-grid" role="region" aria-label="Pip procedural voice cards"></div>
+          </div>
+        </article>
+
+        <!-- High Contrast & Dyslexia Accessibility Suite (pip-contrast) -->
+        <article id="contrastWin" class="win w-contrast" data-foldable aria-labelledby="contrastTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="contrastTitle">pip-contrast.exe</h3>
+            <span class="contrast-badge" aria-hidden="true">WCAG 2.2 AAA</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Accessibility &amp; Typography Suite. Dyslexia-friendly weighted font, reading guide focus ruler, and high contrast options.</p>
+            </div>
+            <div class="contrast-grid" role="region" aria-label="Accessibility toggles">
+              <button type="button" class="btn btn-tiny btn-primary" id="a11yDyslexiaBtn" aria-pressed="false">📖 Dyslexia Font: OFF</button>
+              <button type="button" class="btn btn-tiny" id="a11yGuideBtn" aria-pressed="false">📏 Reading Guide: OFF</button>
+              <button type="button" class="btn btn-tiny" id="a11yContrastBtn" aria-pressed="false">👁️ High Contrast: OFF</button>
+              <button type="button" class="btn btn-tiny" id="a11ySpacingBtn" aria-pressed="false">↔️ Wide Spacing: OFF</button>
+            </div>
+            <div class="contrast-hint">Shortcut: <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> toggles Dyslexia mode instantly.</div>
+          </div>
+        </article>
+
+        <!-- Kaleidoscope Radial Symmetry Drawing (pip-scope.exe) -->
+        <article id="scopeWin" class="win w-scope" data-foldable aria-labelledby="scopeTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="scopeTitle">pip-scope.exe</h3>
+            <span class="scope-badge" aria-hidden="true">Radial Art</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Radial Kaleidoscope Painter. Draw symmetric mandalas and rainbow starbursts with automated 8-fold radial symmetry.</p>
+            </div>
+            <div class="scope-toolbar">
+              <label for="scopeFolds" class="scope-lbl">Folds:</label>
+              <select id="scopeFolds" class="scope-select">
+                <option value="4">4-Fold</option>
+                <option value="6">6-Fold</option>
+                <option value="8" selected>8-Fold</option>
+                <option value="12">12-Fold</option>
+              </select>
+
+              <label for="scopeSize" class="scope-lbl">Brush:</label>
+              <input type="range" id="scopeSize" class="scope-slider" min="2" max="16" value="4">
+
+              <span class="scope-spacer"></span>
+              <button type="button" class="btn btn-tiny" id="scopeClearBtn">🗑️ Clear</button>
+              <button type="button" class="btn btn-tiny btn-primary" id="scopeSaveBtn">💾 Export</button>
+            </div>
+            <div class="scope-canvas-wrap">
+              <canvas id="scopeCanvas" width="300" height="300" class="scope-canvas" aria-label="Kaleidoscope canvas" role="img"></canvas>
+          </div>
+        </div>
+      </article>
+        <!-- Screen Dimmer & Night Warmth Filter (pip-dimmer) -->
+        <article id="dimmerWin" class="win w-dimmer" data-foldable aria-labelledby="dimmerTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="dimmerTitle">pip-dimmer.exe</h3>
+            <span class="dimmer-badge" aria-hidden="true">Circadian Care</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Night Screen Dimmer &amp; Warmth Filter. Protect your eyes at bedtime by adjusting blue-light warmth and brightness.</p>
+            </div>
+            <div class="dimmer-controls">
+              <div class="dimmer-row">
+                <button type="button" class="btn btn-tiny btn-primary" id="dimmerToggleBtn" aria-pressed="false">☀️ Night Filter: OFF</button>
+                <button type="button" class="btn btn-tiny" id="dimmerAutoBtn">🌙 Bedtime Preset</button>
+              </div>
+
+              <div class="dimmer-slider-group">
+                <div class="dimmer-lbl-row">
+                  <label for="dimmerWarmth">Amber Warmth</label>
+                  <span>Blue-Light Cutoff</span>
+                </div>
+                <input type="range" id="dimmerWarmth" class="dimmer-slider" min="0" max="100" value="40">
+              </div>
+
+              <div class="dimmer-slider-group">
+                <div class="dimmer-lbl-row">
+                  <label for="dimmerBrightness">Gentle Dimming</label>
+                  <span>Screen Brightness</span>
+                </div>
+                <input type="range" id="dimmerBrightness" class="dimmer-slider" min="30" max="100" value="85">
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Bubble Wrap Sensory Popping Toy (pip-bubbles.exe) -->
+        <article id="bubblesWin" class="win w-bubbles" data-foldable aria-labelledby="bubblesTitle">
+          <div class="win-bar">
+            <h3 class="win-title" id="bubblesTitle">pip-bubbles.exe</h3>
+            <span class="bubbles-badge" aria-hidden="true">Sensory Popping</span>
+          </div>
+          <div class="win-body">
+            <div class="proj-head">
+              <p>Pip's Sensory Bubble Wrap. Pop bubbles with realistic synthesized click-pop earcons to relax before bedtime.</p>
+            </div>
+            <div class="bubbles-topbar">
+              <span id="bubblesCount" class="bubbles-count" aria-live="polite">0 / 36 Popped</span>
+              <button type="button" class="btn btn-tiny btn-primary" id="bubblesResetBtn">🔄 Fresh Sheet</button>
+            </div>
+            <div id="bubblesGrid" class="bubbles-grid" role="region" aria-label="Bubble wrap sheet"></div>
+          </div>
+        </article>
+        <!-- Sleepy Screen of Death (SSOD) Crash Supervisor -->
+  <dialog id="ssodModal" class="ssod-modal" hidden aria-labelledby="ssodTitle">
+    <div class="ssod-content">
+      <div class="ssod-badge" aria-hidden="true">:( zzz</div>
+      <h2 id="ssodTitle" class="ssod-title">Pip OS encountered a sleepy exception</h2>
+      <p class="ssod-desc">Pip was dreaming so deeply that an unexpected glitch occurred. Don't worry, your offline nursery data is safe.</p>
+      <div id="ssodErrorMsg" class="ssod-error-box" role="alert"></div>
+      <pre id="ssodDetails" class="ssod-details-box"></pre>
+      <div class="ssod-actions">
+        <button type="button" id="ssodReloadBtn" class="btn btn-primary">Wake Pip &amp; Reload</button>
+        <button type="button" id="ssodCopyBtn" class="btn">Copy Diagnostics</button>
+        <button type="button" id="ssodResetBtn" class="btn">Reset Nursery Cache</button>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="js/crash-reporter.js" defer></script>
       </div>
     </section>
 
@@ -1839,6 +2035,7 @@
               <p class="err" id="gbError" role="alert" aria-live="assertive"></p>
             </form>
             <div class="wall-actions">
+              <button id="gbShuffle" class="btn btn-tool" type="button" aria-label="Surprise dream random wish picker"><span aria-hidden="true">🎲</span> Surprise Dream</button>
               <button id="gbExport" class="btn btn-tool" type="button" aria-label="Export wishes as text file">Export
                 wishes (.txt)</button>
             </div>
@@ -1899,6 +2096,47 @@
     </div>
   </dialog>
 
+  <!-- Quick Keyboard Shortcuts HUD Dialog -->
+  <dialog id="shortcutsHud" class="shortcuts-hud win" aria-labelledby="hudTitle">
+    <div class="win-bar">
+      <h3 class="win-title" id="hudTitle">shortcuts-hud.exe</h3>
+      <button type="button" class="win-btn" id="hudCloseBtn" aria-label="Close keyboard shortcuts HUD">✕</button>
+    </div>
+    <div class="win-body">
+      <p class="hud-intro">Quick Keyboard Shortcuts &amp; HUD Reference</p>
+      <dl class="hud-definitions">
+        <div class="hud-row">
+          <dt><kbd>?</kbd></dt>
+          <dd>Toggle this Keyboard Shortcuts HUD</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>1</kbd> to <kbd>8</kbd></dt>
+          <dd>Play pentatonic chimes in Lullaby Lab</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>←</kbd> <kbd>→</kbd></dt>
+          <dd>Turn storybook pages / sweep lantern beam</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>Space</kbd></dt>
+          <dd>Drop blocks in Rattle &amp; Blocks / inspect items</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>F</kbd></dt>
+          <dd>Toggle Night Flashlight mode</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>Alt</kbd> + <kbd>Tab</kbd></dt>
+          <dd>Open application task switcher</dd>
+        </div>
+        <div class="hud-row">
+          <dt><kbd>Esc</kbd></dt>
+          <dd>Close dialogs, menus, and overlays</dd>
+        </div>
+      </dl>
+    </div>
+  </dialog>
+
   <!-- PWA Install Banner -->
   <div id="pwaInstallBanner" class="pwa-install-banner" hidden role="region" aria-label="Install PipOS">
     <div class="pwa-install-content">
@@ -1916,6 +2154,7 @@
   <!-- Desktop Right-Click Context Menu -->
   <menu id="desktopContextMenu" class="desktop-context-menu" hidden role="menu" aria-label="Desktop Context Menu" tabindex="-1">
     <li role="none"><button type="button" id="cmArrange" class="cm-item" role="menuitem">📐 Arrange Icons to Grid</button></li>
+    <li role="none"><button type="button" id="cmAutoSnap" class="cm-item" role="menuitem">🧲 Auto-Snap: Off</button></li>
     <li role="none"><button type="button" id="cmTheme" class="cm-item" role="menuitem">🌓 Toggle Day/Night Theme</button></li>
     <li role="none"><button type="button" id="cmTerminal" class="cm-item" role="menuitem">💻 Open Terminal</button></li>
     <li role="none"><button type="button" id="cmSound" class="cm-item" role="menuitem">🎵 Mute/Unmute Sounds</button></li>
@@ -1931,6 +2170,7 @@
 
   <canvas id="confetti" class="confetti" aria-hidden="true"></canvas>
   <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="readingGuideRuler" class="reading-guide-ruler" aria-hidden="true"></div>
 
   <!-- Floating FPS Telemetry HUD Widget -->
   <aside id="perfHud" class="perf-hud is-hidden" aria-label="FPS Telemetry HUD" inert>
@@ -1948,6 +2188,7 @@
   <script src="js/security.js" defer></script>
   <script src="js/vault.js" defer></script>
   <script src="js/audio.js" defer></script>
+  <script src="js/boot.js" defer></script>
   <script src="js/wall.js" defer></script>
   <script src="js/fx.js" defer></script>
   <script src="js/i18n.js" defer></script>
@@ -1957,6 +2198,7 @@
   <script src="js/rattle.js" defer></script>
   <script src="js/vfs.js" defer></script>
   <script src="js/recorder.js" defer></script>
+  <script src="js/man.js" defer></script>
   <script src="js/terminal.js" defer></script>
   <script src="js/stars.js" defer></script>
   <script src="js/taskbar.js" defer></script>
@@ -1974,6 +2216,14 @@
   <script src="js/haptics.js" defer></script>
   <script src="js/constellations.js" defer></script>
   <script src="js/perf.js" defer></script>
+  <script src="js/converter.js" defer></script>
+  <script src="js/soundboard.js" defer></script>
+  <script src="js/contrast.js" defer></script>
+  <script src="js/scope.js" defer></script>
+  <script src="js/dimmer.js" defer></script>
+  <script src="js/a11y-earcons.js" defer></script>
+
+  <script src="js/bubbles.js" defer></script>
   <script src="js/main.js" defer></script>
 </body>
 

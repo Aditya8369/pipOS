@@ -213,3 +213,140 @@ test('Catch the Falling Stars: dynamic particle bursts with combo-scaled palette
   assert.deepStrictEqual(crystalPal, STARS_CONFIG.COMBO_PALETTES.crystal);
 });
 
+test('Catch the Falling Stars: Pause and Resume game preserves score, misses, stars, and state', () => {
+  const { initStars } = require('./stars.js');
+  const listeners = {};
+  const mockCanvas = {
+    getContext: () => ({
+      scale: () => {},
+      clearRect: () => {},
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      fillRect: () => {},
+      rect: () => {},
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      fill: () => {},
+      stroke: () => {},
+      translate: () => {},
+      rotate: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {}
+    }),
+    addEventListener: (type, cb) => { listeners[type] = cb; },
+    getBoundingClientRect: () => ({ left: 0, width: 300 })
+  };
+
+  const elements = {};
+  function makeElem(id) {
+    return {
+      id,
+      textContent: '',
+      setAttribute: () => {},
+      classList: {
+        add: () => {},
+        remove: () => {},
+        contains: () => false
+      },
+      addEventListener: (type, cb) => {
+        listeners[id + ':' + type] = cb;
+      }
+    };
+  }
+
+  global.document = {
+    getElementById: (id) => {
+      if (id === 'starsCanvas') return mockCanvas;
+      if (!elements[id]) elements[id] = makeElem(id);
+      return elements[id];
+    }
+  };
+  global.window = { devicePixelRatio: 1, addEventListener: () => {} };
+  global.requestAnimationFrame = () => 1;
+  global.cancelAnimationFrame = () => {};
+
+  try {
+    const game = initStars();
+    const actionBtn = elements['starsActionBtn'];
+    const clickAction = listeners['starsActionBtn:click'];
+    const keydownCanvas = listeners['keydown'];
+
+    // 1. Initial click starts the game
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, false);
+
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+
+    // Accumulate in-game progress
+    game.state.score = 75;
+    game.state.misses = 1;
+    game.state.combo = 4;
+    const testStar = game.spawnStar('comet');
+    game.state.cloud.wideUntil = Date.now() + 4000;
+    assert.strictEqual(game.state.stars.length, 1);
+
+    // 2. Pause the game via action button click
+    clickAction();
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, true);
+    assert.strictEqual(actionBtn.textContent, 'Resume Game');
+    assert.strictEqual(game.state.score, 75, 'Score must not be modified on pause');
+    assert.strictEqual(game.state.misses, 1, 'Misses must not be modified on pause');
+    assert.strictEqual(game.state.combo, 4, 'Combo must not be modified on pause');
+    assert.strictEqual(game.state.stars.length, 1, 'Active stars must remain on canvas on pause');
+    assert.ok(game.state.cloud.remainingWideTime > 0, 'Remaining wide power-up time must be preserved');
+
+    // 3. Resume the game via action button click
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+    assert.strictEqual(game.state.score, 75, 'Score must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.misses, 1, 'Misses must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.combo, 4, 'Combo must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.stars.length, 1, 'Active stars must NOT be cleared upon resuming game');
+    assert.strictEqual(game.state.stars[0], testStar);
+    assert.ok(game.state.cloud.wideUntil > Date.now(), 'Wide power-up boost must resume with remaining time');
+
+    // 4. Pause and resume via keyboard controls (Space/Enter)
+    keydownCanvas({ key: ' ', preventDefault: () => {} });
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, true);
+    assert.strictEqual(actionBtn.textContent, 'Resume Game');
+
+    keydownCanvas({ key: 'Enter', preventDefault: () => {} });
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.score, 75);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+
+    // 5. Game Over transition properly resets state on Play Again
+    game.triggerGameOver();
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, true);
+    assert.strictEqual(actionBtn.textContent, 'Play Again');
+
+    // Clicking Play Again starts a new game
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, false);
+    assert.strictEqual(game.state.score, 0, 'New game after game over must reset score');
+    assert.strictEqual(game.state.misses, 0, 'New game after game over must reset misses');
+    assert.strictEqual(game.state.combo, 0, 'New game after game over must reset combo');
+    assert.strictEqual(game.state.stars.length, 0, 'New game after game over must reset stars');
+  } finally {
+    delete global.document;
+    delete global.window;
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+  }
+});
+

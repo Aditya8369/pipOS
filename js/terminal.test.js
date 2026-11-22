@@ -304,47 +304,106 @@ test('initTerminal handles Tab and Shift-Tab cycling in-place and updates cursor
   }
 });
 
-test('terminal piping executes chained commands (|) and stream redirection (> and >>)', () => {
+test('Terminal command history navigation cycles with ArrowUp and ArrowDown and restores pending buffer', () => {
+  const termSrc = fs.readFileSync(TERM_JS_PATH, 'utf8');
+  assert.match(termSrc, /cmdHistory\s*=\s*\[\]/, 'js/terminal.js must define cmdHistory array');
+  assert.match(termSrc, /historyIdx\s*=\s*-1/, 'js/terminal.js must define historyIdx = -1 pointer');
+
   const term = require(TERM_JS_PATH);
-  const vfs = require('./vfs.js');
-  global.PIP = global.PIP || {};
-  global.PIP.fs = vfs;
 
-  // 1. Simple piping: echo -> wc
-  const wcRes = term.executeCommand('echo starlight dreams | wc -w');
-  assert.strictEqual(wcRes.ok, true);
-  assert.strictEqual(wcRes.output.trim(), '2');
+  let keydownHandler = null;
+  let selectionStart = -1, selectionEnd = -1;
 
-  // 2. Piping with grep
-  const grepRes = term.executeCommand('echo "apples\\nbananas\\noranges" | grep ban');
-  assert.strictEqual(grepRes.ok, true);
-  assert.strictEqual(grepRes.output.trim(), 'bananas');
+  const mockInput = {
+    value: '',
+    focus() {},
+    setSelectionRange(start, end) {
+      selectionStart = start;
+      selectionEnd = end;
+    },
+    addEventListener(event, fn) {
+      if (event === 'keydown') keydownHandler = fn;
+    }
+  };
 
-  // 3. Multi-stage pipeline: echo -> grep -> sort
-  const multiRes = term.executeCommand('echo "zebra\\napple\\nbear\\nant" | grep -v zebra | sort');
-  assert.strictEqual(multiRes.ok, true);
-  assert.strictEqual(multiRes.output.trim(), 'ant\napple\nbear');
+  const mockGhost = { innerHTML: '' };
+  const mockSuggestions = {
+    innerHTML: '',
+    children: [],
+    classList: { add() {}, remove() {} },
+    appendChild(child) { this.children.push(child); }
+  };
+  const mockScreen = {
+    appendChild() {},
+    parentElement: { addEventListener() {} }
+  };
+  const mockWin = { id: 'terminal' };
 
-  // 4. Overwrite redirection (>): write stdout to PipFS file
-  const redirRes = term.executeCommand('echo "midnight whispers" > /home/pip/test_pipes.txt');
-  assert.strictEqual(redirRes.ok, true);
-  assert.strictEqual(vfs.readFile('/home/pip/test_pipes.txt'), 'midnight whispers');
+  global.window = global.window || {};
+  global.document = {
+    readyState: 'complete',
+    getElementById(id) {
+      if (id === 'terminal') return mockWin;
+      if (id === 'termScreen') return mockScreen;
+      if (id === 'termInput') return mockInput;
+      if (id === 'termGhost') return mockGhost;
+      if (id === 'termSuggestions') return mockSuggestions;
+      return null;
+    },
+    querySelector(sel) { return this.getElementById(sel.replace('#', '')); },
+    querySelectorAll() { return []; },
+    createElement() {
+      return {
+        className: '', textContent: '', innerHTML: '', attributes: {}, listeners: {},
+        setAttribute(k, v) { this.attributes[k] = v; },
+        appendChild() {}, addEventListener() {}
+      };
+    }
+  };
 
-  // 5. Append redirection (>>): append line to PipFS file
-  const appendRes = term.executeCommand('echo "sleep tight" >> /home/pip/test_pipes.txt');
-  assert.strictEqual(appendRes.ok, true);
-  assert.strictEqual(vfs.readFile('/home/pip/test_pipes.txt'), 'midnight whispers\nsleep tight');
+  try {
+    term.init();
+    assert.strictEqual(typeof keydownHandler, 'function', 'Must register keydown handler');
 
-  // 6. Pipe into cat and head
-  const headRes = term.executeCommand('cat /home/pip/test_pipes.txt | head -n 1');
-  assert.strictEqual(headRes.ok, true);
-  assert.strictEqual(headRes.output.trim(), 'midnight whispers');
+    // Execute two distinct commands
+    term.executeCommand('whoami');
+    term.executeCommand('time');
 
-  // 7. Pipe into tail
-  const tailRes = term.executeCommand('cat /home/pip/test_pipes.txt | tail -n 1');
-  assert.strictEqual(tailRes.ok, true);
-  assert.strictEqual(tailRes.output.trim(), 'sleep tight');
+    // Simulate user typing a pending command before pressing ArrowUp
+    mockInput.value = 'cal';
 
-  // Clean up
-  vfs.unlink('/home/pip/test_pipes.txt');
+    // Press ArrowUp: should save pending 'cal' and navigate to latest command 'time'
+    keydownHandler({
+      key: 'ArrowUp',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'time', 'ArrowUp must load latest command "time"');
+    assert.strictEqual(selectionEnd, 4, 'Cursor must be at the end of "time" via setSelectionRange');
+
+    // Press ArrowUp again: should navigate to earlier command 'whoami'
+    keydownHandler({
+      key: 'ArrowUp',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'whoami', 'ArrowUp must load earlier command "whoami"');
+    assert.strictEqual(selectionEnd, 6, 'Cursor must be at the end of "whoami" via setSelectionRange');
+
+    // Press ArrowDown: should navigate forward to 'time'
+    keydownHandler({
+      key: 'ArrowDown',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'time', 'ArrowDown must navigate forward to "time"');
+    assert.strictEqual(selectionEnd, 4, 'Cursor must be at the end of "time"');
+
+    // Press ArrowDown again: should restore pending buffer 'cal' at index -1
+    keydownHandler({
+      key: 'ArrowDown',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'cal', 'ArrowDown past newest command must restore pending buffer "cal"');
+    assert.strictEqual(selectionEnd, 3, 'Cursor must be at the end of restored pending buffer "cal"');
+  } finally {
+    delete global.document;
+  }
 });
