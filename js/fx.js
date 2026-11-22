@@ -193,10 +193,24 @@
     cv.height = H * dpr;
     cv.style.display = 'block';
     var colors = ['#a34063', '#ffb454', '#fff1da', '#8b8fd9', '#ff9fc0', '#9ff0d0'];
-    var n = count || 150, parts = [];
+    var originX = W / 2, originY = H * 0.45;
+    var n = 150;
+    if (count && typeof count === 'object' && typeof count.getBoundingClientRect === 'function') {
+      try {
+        var rect = count.getBoundingClientRect();
+        if (rect && typeof rect.left === 'number') {
+          originX = rect.left + (rect.width || 0) / 2;
+          originY = rect.top + (rect.height || 0) / 2;
+          n = 60;
+        }
+      } catch (e) {}
+    } else if (typeof count === 'number') {
+      n = count;
+    }
+    var parts = [];
     for (var i = 0; i < n; i++) {
       parts.push({
-        x: W / 2 + (Math.random() - 0.5) * 140, y: H * 0.45,
+        x: originX + (Math.random() - 0.5) * 140, y: originY,
         vx: (Math.random() - 0.5) * 15, vy: -Math.random() * 14 - 4,
         w: 6 + Math.random() * 7, h: 8 + Math.random() * 8,
         r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3,
@@ -696,6 +710,18 @@
       });
     }
 
+    var shuffleBtn = $('#gbShuffle');
+    if (shuffleBtn && !shuffleBtn._hasShuffleHandler) {
+      shuffleBtn._hasShuffleHandler = true;
+      shuffleBtn.addEventListener('click', function () {
+        if (wall && typeof wall.surpriseDream === 'function') {
+          wall.surpriseDream(document);
+        } else if (wall && typeof wall.pickRandomDream === 'function') {
+          wall.pickRandomDream(document);
+        }
+      });
+    }
+
     // If backend is configured, attempt retrieval
     if (backend && wall) {
       wall.fetchWishes(backend, function (remoteWishes) {
@@ -811,6 +837,7 @@
 
   PIP.fx = {
     confetti: confetti,
+    spawnSparkle: spawnSparkle,
     createNoteElement: createNoteElement,
     formatWishesText: formatWishesText,
     exportWishes: exportWishes,

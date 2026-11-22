@@ -30,7 +30,7 @@
     'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet', 'sleep',
     'play', 'wish', 'fortune', 'dream', 'calc', 'blocks', 'clear', 'history',
     'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'rm',
-    'echo', 'grep', 'wc', 'sort', 'uniq', 'head', 'tail'
+    'echo', 'grep', 'wc', 'sort', 'uniq', 'head', 'tail', 'crt'
   ];
 
   var currentCwd = '/home/pip';
@@ -43,8 +43,10 @@
     "Sleep is the gentle machine that rewinds tomorrow's wonders."
   ];
 
-  var history = [];
-  var historyIndex = -1;
+  var cmdHistory = [];
+  var historyIdx = -1;
+  var pendingBuffer = '';
+  var history = cmdHistory;
 
   function sanitize(str) {
     if (!str) return '';
@@ -104,6 +106,7 @@
           "  fortune / dream    - Read a midnight prophecy",
           "  calc <expr>        - Quick arithmetic evaluator (e.g., calc 24 * 7)",
           "  blocks [stats|export] - View or export Rattle & Blocks tower records",
+          "  man <cmd>          - Format and display reference manual page",
           "  history            - Display recent command history",
           "  clear              - Wipe terminal screen"
         ].join('\n');
@@ -436,8 +439,45 @@
         out = history.map(function (h, i) { return (i + 1) + '  ' + h; }).join('\n');
         break;
 
+      case 'man':
+        if (!args[0]) {
+          out = "What manual page do you want?\nFor example, try 'man ls' or 'man cat'.";
+        } else {
+          var entry = (typeof PipMan !== 'undefined' ? PipMan.getManPage(args[0]) : null);
+          out = entry || ("No manual entry for " + args[0]);
+        }
+        break;
+
       case 'clear':
         return { ok: true, clear: true, output: '' };
+
+      case 'crt':
+        var crtArg = args[0] ? args[0].toLowerCase() : '';
+        var curCrt = (typeof document !== 'undefined' && document.body && document.body.classList)
+          ? document.body.classList.contains('crt-active')
+          : false;
+        var nextCrt;
+        if (crtArg === 'on') {
+          nextCrt = true;
+        } else if (crtArg === 'off') {
+          nextCrt = false;
+        } else {
+          nextCrt = !curCrt;
+        }
+        var storeCrt = (typeof window !== 'undefined' && window.PIP && window.PIP.store)
+          ? window.PIP.store
+          : (typeof global !== 'undefined' && global.window && global.window.PIP && global.window.PIP.store ? global.window.PIP.store : null);
+        if (storeCrt && typeof storeCrt.set === 'function') {
+          storeCrt.set('crt_mode', String(nextCrt));
+        }
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+          document.body.classList.toggle('crt-active', nextCrt);
+          if (typeof document.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+            document.dispatchEvent(new CustomEvent('pip-crt-toggle', { detail: { active: nextCrt } }));
+          }
+        }
+        out = "CRT Scanlines: " + (nextCrt ? "ON" : "OFF");
+        break;
 
       case 'echo':
         var echoText = args.join(' ');
@@ -650,7 +690,8 @@
     if (!raw) return { ok: true, output: '' };
 
     history.push(raw);
-    historyIndex = history.length;
+    historyIdx = -1;
+    pendingBuffer = '';
 
     // Check for redirection: >> or >
     var isAppend = false;
@@ -730,6 +771,11 @@
       params: ['chime', 'lullaby'],
       hint: ' [chime|lullaby]',
       pills: ['play chime', 'play lullaby']
+    },
+    crt: {
+      params: ['on', 'off'],
+      hint: ' [on|off]',
+      pills: ['crt on', 'crt off']
     },
     calc: {
       params: ['24 * 7', '12 * 8', '100 / 4', '2 ^ 8'],
@@ -976,6 +1022,8 @@
         appendLine('pip@midnight:~$ ' + val, true);
         var res = executeCommand(val);
         input.value = '';
+        historyIdx = -1;
+        pendingBuffer = '';
         resetTabCycle();
         updateGhostAndSuggestions();
 
@@ -988,22 +1036,27 @@
         if (audio.isOn()) audio.pop();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (history.length > 0 && historyIndex > 0) {
-          historyIndex--;
-          input.value = history[historyIndex];
+        if (cmdHistory.length > 0) {
+          if (historyIdx === -1) {
+            pendingBuffer = input.value;
+            historyIdx = cmdHistory.length - 1;
+          } else if (historyIdx > 0) {
+            historyIdx--;
+          }
+          input.value = cmdHistory[historyIdx];
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (historyIndex < history.length - 1) {
-          historyIndex++;
-          input.value = history[historyIndex];
-          setCursorEnd(input);
-          updateGhostAndSuggestions();
-        } else {
-          historyIndex = history.length;
-          input.value = '';
+        if (historyIdx !== -1) {
+          if (historyIdx < cmdHistory.length - 1) {
+            historyIdx++;
+            input.value = cmdHistory[historyIdx];
+          } else {
+            historyIdx = -1;
+            input.value = pendingBuffer;
+          }
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
@@ -1031,7 +1084,9 @@
     init: initTerminal,
     executeCommand: executeCommand,
     autocomplete: autocomplete,
-    getHistory: function () { return history; },
+    getHistory: function () { return cmdHistory; },
+    cmdHistory: cmdHistory,
+    getHistoryIdx: function () { return historyIdx; },
     COMMANDS: COMMANDS,
     PARAM_HINTS: PARAM_HINTS
   };

@@ -45,6 +45,8 @@ graph TD
 | **Sticker Book** | `js/stickers.js` | Manages achievement unlocks and sticker badges | `PIP.stickers.unlock()`, `PIP.stickers.isUnlocked()`, `PIP.stickers.reset()` |
 | **Retro CRT Shell** | `js/terminal.js` | Virtual shell with command parsing, history, and tab completion | `PIP.terminal.executeCommand()`, `PIP.terminal.autocomplete()` |
 | **Taskbar & Launcher** | `js/taskbar.js` | Vintage Start Menu, app shortcuts, and window controls | `PIP.taskbar.open()`, `PIP.taskbar.close()`, `PIP.taskbar.toggle()` |
+| **Cryptographic Vault** | `js/vault.js` (see [Security & VFS](SECURITY_AND_VFS.md)) | HMAC-SHA256 sealed envelopes, tamper detection, and signed backups | `PIP.vault.setSecure()`, `PIP.vault.getSecure()`, `PIP.vault.exportBackup()` |
+| **Virtual Filesystem** | `js/vfs.js` (see [Security & VFS](SECURITY_AND_VFS.md)) | POSIX hierarchical path resolution, directory traversal, and virtual I/O | `PIP.fs.resolvePath()`, `PIP.fs.readFile()`, `PIP.fs.writeFile()` |
 
 ---
 

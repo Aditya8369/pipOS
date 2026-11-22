@@ -403,6 +403,7 @@
             it.classList.remove('is-found');
           });
         }
+        room.classList.remove('is-done');
         saveProgress();
         syncRoomElements();
         updateRoomView();
@@ -855,16 +856,9 @@
     function drop() {
       if (!st) { reset(); return; }
       if (st.over) { reset(); return; }
-      if (!st.cur || typeof st.cur.x !== 'number' || isNaN(st.cur.x)) {
-        spawn();
-        ensureLoop();
-        return;
-      }
+      if (!st.cur) return;
       var top = (st.stack && st.stack.length) ? st.stack[st.stack.length - 1] : null;
-      if (!top || typeof top.x !== 'number' || isNaN(top.x) || typeof top.w !== 'number' || isNaN(top.w)) {
-        reset();
-        return;
-      }
+      if (!top) return;
       var c = st.cur;
       var left = Math.max(c.x, top.x), right = Math.min(c.x + c.w, top.x + top.w), ov = right - left;
       if (isNaN(ov) || ov < 3) {
@@ -1426,44 +1420,85 @@
     var pauseBtn = document.getElementById('storyPauseBtn');
     var stopBtn = document.getElementById('storyStopBtn');
 
+    function hasSpeechSupport() {
+      return typeof window !== 'undefined' &&
+             'speechSynthesis' in window &&
+             Boolean(window.speechSynthesis) &&
+             (typeof window.SpeechSynthesisUtterance !== 'undefined' || typeof SpeechSynthesisUtterance !== 'undefined');
+    }
+
     function stopSpeech() {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      try {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis && typeof window.speechSynthesis.cancel === 'function') {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) {
+        /* Speech synthesis cancel fails safely */
+      }
       if (speechBtn) speechBtn.hidden = false;
       if (pauseBtn) { pauseBtn.hidden = true; pauseBtn.textContent = '⏸ Pause'; }
       if (stopBtn) stopBtn.hidden = true;
     }
 
-    if (speechBtn && 'speechSynthesis' in window) {
-      speechBtn.addEventListener('click', function () {
-        var activePage = pages[current];
-        if (!activePage) return;
-        var textToRead = (activePage.querySelector('h4')?.textContent || '') + '. ' + (activePage.querySelector('p')?.textContent || '');
-        window.speechSynthesis.cancel();
-        var utterance = new SpeechSynthesisUtterance(textToRead);
-        utterance.rate = 0.9;
-        utterance.onstart = function () {
-          speechBtn.hidden = true;
-          if (pauseBtn) pauseBtn.hidden = false;
-          if (stopBtn) stopBtn.hidden = false;
-        };
-        utterance.onend = stopSpeech;
-        window.speechSynthesis.speak(utterance);
-      });
-    } else if (speechBtn) {
-      speechBtn.style.display = 'none';
+    if (hasSpeechSupport()) {
+      if (speechBtn) {
+        speechBtn.addEventListener('click', function () {
+          var activePage = pages[current];
+          if (!activePage) return;
+          var h4El = activePage.querySelector('h4');
+          var pEl = activePage.querySelector('p');
+          var textToRead = ((h4El && h4El.textContent) || '') + '. ' + ((pEl && pEl.textContent) || '');
+          try {
+            if (typeof window.speechSynthesis.cancel === 'function') {
+              window.speechSynthesis.cancel();
+            }
+            var UtteranceClass = (typeof window !== 'undefined' && window.SpeechSynthesisUtterance) ||
+                                 (typeof SpeechSynthesisUtterance !== 'undefined' && SpeechSynthesisUtterance);
+            if (!UtteranceClass) {
+              stopSpeech();
+              return;
+            }
+            var utterance = new UtteranceClass(textToRead);
+            utterance.rate = 0.9;
+            utterance.onstart = function () {
+              if (speechBtn) speechBtn.hidden = true;
+              if (pauseBtn) { pauseBtn.hidden = false; pauseBtn.textContent = '⏸ Pause'; }
+              if (stopBtn) stopBtn.hidden = false;
+            };
+            utterance.onend = stopSpeech;
+            utterance.onerror = function () {
+              stopSpeech();
+            };
+            window.speechSynthesis.speak(utterance);
+          } catch (e) {
+            stopSpeech();
+          }
+        });
+      }
+
+      if (pauseBtn) {
+        pauseBtn.addEventListener('click', function () {
+          if (!hasSpeechSupport()) return;
+          try {
+            if (!window.speechSynthesis) return;
+            if (window.speechSynthesis.paused) {
+              window.speechSynthesis.resume();
+              pauseBtn.textContent = '⏸ Pause';
+            } else if (window.speechSynthesis.speaking) {
+              window.speechSynthesis.pause();
+              pauseBtn.textContent = '▶ Resume';
+            }
+          } catch (e) {
+            stopSpeech();
+          }
+        });
+      }
+    } else {
+      if (speechBtn) speechBtn.style.display = 'none';
+      if (pauseBtn) pauseBtn.style.display = 'none';
+      if (stopBtn) stopBtn.style.display = 'none';
     }
 
-    if (pauseBtn) {
-      pauseBtn.addEventListener('click', function () {
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-          pauseBtn.textContent = '⏸ Pause';
-        } else if (window.speechSynthesis.speaking) {
-          window.speechSynthesis.pause();
-          pauseBtn.textContent = '▶ Resume';
-        }
-      });
-    }
     if (stopBtn) stopBtn.addEventListener('click', stopSpeech);
 
     function renderPage(idx) {
@@ -1695,6 +1730,7 @@
     importScores: importScores,
     updateRouteTrail: updateRouteTrail,
     renderRouteTrail: renderRouteTrail,
+    initStorybook: initStorybook,
     init: function () {
       initLab();
       initLights();
@@ -1714,7 +1750,8 @@
       exportScores: exportScores,
       importScores: importScores,
       updateRouteTrail: updateRouteTrail,
-      renderRouteTrail: renderRouteTrail
+      renderRouteTrail: renderRouteTrail,
+      initStorybook: initStorybook
     };
   }
 })();

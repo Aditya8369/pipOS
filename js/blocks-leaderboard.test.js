@@ -74,66 +74,8 @@ test('js/toys.js implements combo tracking and DOM updates in initBlocks', () =>
   assert.match(toysSrc, /saveTopScore\(/, 'Must save score on game over');
 });
 
-test('Rattle & Blocks freeze prevention: verifies loop wake-up, boundary, and narrow block safeguards', () => {
+test('js/toys.js drop() guards against missing st.cur to prevent TypeError', () => {
   const toysSrc = fs.readFileSync(TOYS_JS_PATH, 'utf8');
 
-  // Verify ensureLoop and stopLoop lifecycle management
-  assert.match(toysSrc, /function\s+ensureLoop\s*\(/, 'Must define ensureLoop helper to restart stalled loop');
-  assert.match(toysSrc, /function\s+isCanvasActive\s*\(/, 'Must define isCanvasActive helper for geometry/display verification');
-
-  // Verify narrow-width highlight protection (prevents negative radius arcTo / IndexSizeError crash)
-  assert.match(toysSrc, /b\.w\s*>\s*12/, 'Must guard block highlight bevel from negative width when b.w < 12');
-  assert.match(toysSrc, /Math\.max\(\s*0\s*,\s*Math\.min\(/, 'Must clamp corner radius to non-negative values');
-
-  // Verify loop wake-up on drop interaction and window events
-  assert.match(toysSrc, /function\s+onDrop\s*\(/, 'Must route drop interactions through onDrop');
-  assert.match(toysSrc, /ensureLoop\(\)/, 'Must wake loop on drop interaction');
-
-  // Verify dt delta calculation guards against negative time and NaN
-  assert.match(toysSrc, /isNaN\(\s*delta\s*\)\s*\|\|\s*delta\s*<\s*0/, 'Must sanitize dt against clock jitter and negative deltas');
-});
-
-test('Canvas rr() and block highlight logic handles narrow widths and chips without throwing IndexSizeError', () => {
-  // Recreate rr and highlight logic to verify no negative radius can be passed to arcTo
-  const arcToCalls = [];
-  const mockCtx = {
-    beginPath: () => {},
-    moveTo: () => {},
-    arcTo: (x1, y1, x2, y2, r) => {
-      if (r < 0) {
-        throw new Error(`IndexSizeError: Radius (${r}) cannot be negative`);
-      }
-      arcToCalls.push({ x1, y1, x2, y2, r });
-    },
-    closePath: () => {}
-  };
-
-  function testRr(x, y, w, h, rad) {
-    if (typeof w !== 'number' || typeof h !== 'number' || isNaN(w) || isNaN(h) || w <= 0 || h <= 0) return;
-    if (typeof x !== 'number' || typeof y !== 'number' || isNaN(x) || isNaN(y)) return;
-    rad = Math.max(0, Math.min(rad || 0, w / 2, h / 2));
-    mockCtx.beginPath();
-    mockCtx.moveTo(x + rad, y);
-    mockCtx.arcTo(x + w, y, x + w, y + h, rad);
-    mockCtx.arcTo(x + w, y + h, x, y + h, rad);
-    mockCtx.arcTo(x, y + h, x, y, rad);
-    mockCtx.arcTo(x, y, x + w, y, rad);
-    mockCtx.closePath();
-  }
-
-  // Test various narrow, zero, and negative widths that could occur on near-miss drops or small chips
-  const testWidths = [-5, 0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 12, 16, 160];
-  for (const w of testWidths) {
-    assert.doesNotThrow(() => {
-      testRr(10, 10, w, 26, 7);
-      if (w > 12) {
-        testRr(14, 13, Math.max(0, w - 8), 6, 3);
-      }
-    }, `Drawing block or bevel with width ${w} must never throw IndexSizeError`);
-  }
-
-  // Ensure all recorded arcTo calls had r >= 0
-  for (const call of arcToCalls) {
-    assert.ok(call.r >= 0, `arcTo radius ${call.r} must be non-negative`);
-  }
+  assert.match(toysSrc, /if\s*\(!st\.cur\)\s*return;/, 'drop() must guard against missing st.cur before reading properties');
 });

@@ -140,6 +140,60 @@
       apply();
     });
   }
+    /* ---------- share Pip ---------- */
+  function initShare() {
+    var btn = $('#shareBtn');
+    if (!btn) return;
+    var shareData = {
+      title: 'Pip, Junior Dream Engineer',
+      text: 'Come meet Pip, the skull baby who builds dreams at the Midnight Nursery.',
+      url: window.location.href.split('#')[0]
+    };
+
+    // Fallback: copy the link and tell the visitor with a toast
+    function copyLink() {
+      var url = shareData.url;
+      function done() { toast('Link copied. Share Pip with a friend!'); }
+      function manual() { toast('Could not copy automatically. Please copy the page address from your browser to share Pip.', 6000); }
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(url).then(done, function () { legacyCopy(url) ? done() : manual(); });
+      } else {
+        legacyCopy(url) ? done() : manual();
+      }
+    }
+
+    // Older browsers: copy through a temporary text box
+    function legacyCopy(text) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+
+    btn.addEventListener('click', function () {
+      if (typeof navigator.share === 'function') {
+        var p;
+        try { p = navigator.share(shareData); } catch (e) { copyLink(); return; }
+        if (p && typeof p.catch === 'function') {
+          p.catch(function (err) {
+            // closing the share sheet is not an error
+            if (err && err.name === 'AbortError') return;
+            copyLink();
+          });
+        }
+      } else {
+        copyLink();
+      }
+    });
+  }
   /* ---------- sound switch ---------- */
   function initSound() {
     var btn = $('#soundBtn'), label = $('#soundLabel');
@@ -298,13 +352,29 @@
     });
   }
 
-  /* ---------- shortcuts cheat sheet (keys.txt) ---------- */
+  /* ---------- shortcuts cheat sheet (keys.txt & HUD dialog) ---------- */
   function initShortcuts() {
     var win = $('#shortcuts');
-    if (!win) return;
-    var body = $('.win-body', win);
+    var body = win ? $('.win-body', win) : null;
+    var dialog = document.getElementById('shortcutsHud') || (typeof document !== 'undefined' ? document.querySelector('dialog.shortcuts-hud') : null);
+    var closeBtn = document.getElementById('hudCloseBtn');
+
+    if (closeBtn && dialog) {
+      closeBtn.addEventListener('click', function () {
+        if (typeof dialog.close === 'function') dialog.close();
+      });
+    }
+
+    if (dialog) {
+      dialog.addEventListener('click', function (e) {
+        if (e.target === dialog && typeof dialog.close === 'function') {
+          dialog.close();
+        }
+      });
+    }
 
     function toggleShortcuts(openOnly) {
+      if (!win) return;
       var btn = $('.win-btn', win);
       var isCurrentlyOpen = body && !body.hidden;
       var isFocused = win.contains(document.activeElement);
@@ -340,14 +410,27 @@
 
       if (e.key === '?' || (e.key === '/' && e.shiftKey)) {
         e.preventDefault();
-        toggleShortcuts(false);
+        var hud = document.getElementById('shortcutsHud') || dialog;
+        if (hud && typeof hud.showModal === 'function') {
+          if (hud.open && typeof hud.close === 'function') {
+            hud.close();
+          } else {
+            hud.showModal();
+          }
+        } else {
+          toggleShortcuts(false);
+        }
       } else if (e.key === 'f' || e.key === 'F') {
         if (PIP.flashlight && typeof PIP.flashlight.toggle === 'function') {
           PIP.flashlight.toggle();
         }
-      } else if (e.key === 'Escape' && body && !body.hidden && win.contains(document.activeElement)) {
-        var btn = $('.win-btn', win);
-        if (btn) btn.click();
+      } else if (e.key === 'Escape') {
+        if (dialog && dialog.open && typeof dialog.close === 'function') {
+          dialog.close();
+        } else if (body && !body.hidden && win && win.contains(document.activeElement)) {
+          var btn = $('.win-btn', win);
+          if (btn) btn.click();
+        }
       }
     });
 
@@ -489,14 +572,34 @@
   function initTrash() {
     var t = $('#trashBtn');
     if (!t) return;
-    var lines = [
-      'Nightmares is empty. It has always been empty.',
-      'Pip checked twice. Still empty.',
-      'Only a single spare sock in there.'
-    ];
-    var i = 0;
     t.addEventListener('click', function () {
-      toast(lines[i++ % lines.length]);
+      if (audio && typeof audio.note === 'function') {
+        audio.note(1046, { dur: 0.8, gain: 0.15 });
+      }
+      if (t.classList) {
+        t.classList.add('is-bursting');
+        setTimeout(function () { t.classList.remove('is-bursting'); }, 500);
+      }
+      var rect = (typeof t.getBoundingClientRect === 'function') ? t.getBoundingClientRect() : null;
+      var cx = rect ? (rect.left + rect.width / 2) : 60;
+      var cy = rect ? (rect.top + rect.height / 2) : 100;
+      for (var p = 0; p < 10; p++) {
+        var angle = (p / 10) * Math.PI * 2;
+        var speed = 2 + (p % 3);
+        var vx = Math.cos(angle) * speed;
+        var vy = Math.sin(angle) * speed;
+        if (PIP.fx && PIP.fx.particles && typeof PIP.fx.particles.spawn === 'function') {
+          PIP.fx.particles.spawn(cx, cy, { vx: vx, vy: vy, glyph: '✦', size: 10 });
+        } else if (PIP.fx && typeof PIP.fx.spawnSparkle === 'function') {
+          PIP.fx.spawnSparkle(cx, cy, { vx: vx, vy: vy, glyph: '✦', size: 10 });
+        }
+      }
+      toast('✨ All nightmares cleared. Sweet dreams only!');
+      if (PIP.stickers && typeof PIP.stickers.unlock === 'function') {
+        if (!PIP.stickers.unlock('trash')) {
+          PIP.stickers.unlock('route7');
+        }
+      }
     });
   }
 
@@ -511,12 +614,55 @@
     }
   }
 
+  /* ---------- CRT Scanline & Phosphor Bloom ---------- */
+  function initCrt() {
+    function setCrt(enable) {
+      store.set('crt_mode', enable ? 'true' : 'false');
+      if (document.body) {
+        document.body.classList.toggle('crt-active', !!enable);
+      }
+    }
+
+    var isCrt = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+    if (isCrt && document.body) {
+      document.body.classList.add('crt-active');
+    }
+
+    document.addEventListener('pip-crt-toggle', function (e) {
+      var next;
+      if (e && e.detail && typeof e.detail.active === 'boolean') {
+        next = e.detail.active;
+      } else {
+        var cur = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+        next = !cur;
+      }
+      setCrt(next);
+    });
+
+    var crtBtn = $('#crtBtn');
+    if (crtBtn) {
+      crtBtn.addEventListener('click', function () {
+        var cur = store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+        setCrt(!cur);
+      });
+    }
+
+    if (PIP) {
+      PIP.setCrt = setCrt;
+      PIP.isCrt = function () {
+        return store.get('crt_mode', '') === 'true' || store.get('crt_mode', '') === true;
+      };
+    }
+  }
+
   /* ---------- go ---------- */
   safe('images', PIP.optionalImages);
   safe('i18n', PIP.i18n ? PIP.i18n.init : function () {});
   safe('pip', PIP.pip.init);
   safe('theme', initTheme);
+  safe('crt', initCrt);
   safe('sound', initSound);
+    safe('share', initShare);
   safe('quiet', initQuiet);
   safe('clock', initClock);
   safe('foldable', initFoldable);
@@ -528,6 +674,7 @@
   safe('stars', PIP.stars && PIP.stars.init);
   safe('rattle', PIP.rattle && PIP.rattle.init);
   safe('drag', PIP.drag && PIP.drag.init);
+  safe('desktop', PIP.desktop && PIP.desktop.init);
   safe('haptics', PIP.haptics && PIP.haptics.init);
   safe('recorder', PIP.recorder && PIP.recorder.init);
   safe('story', initStory);
