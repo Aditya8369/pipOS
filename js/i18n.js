@@ -50,7 +50,11 @@
       'Sound on': 'Sound on',
       'Sound off': 'Sound off',
       'Turn sound on': 'Turn sound on',
-      'Turn sound off': 'Turn sound off'
+      'Turn sound off': 'Turn sound off',
+      dreams_count: '{count} dream delivered | {count} dreams delivered',
+      stars_count: '{count} star caught | {count} stars caught',
+      wishes_count: '{count} wish pinned | {count} wishes pinned',
+      page_indicator: 'Page {current} of {total}'
     },
     hi: {
       nav_pip: 'पिप',
@@ -94,17 +98,290 @@
       'Sound on': 'ध्वनि चालू',
       'Sound off': 'ध्वनि बंद',
       'Turn sound on': 'ध्वनि चालू करें',
-      'Turn sound off': 'ध्वनि बंद करें'
+      'Turn sound off': 'ध्वनि बंद करें',
+      dreams_count: '{count} सपना पहुँचाया गया | {count} सपने पहुँचाए गए',
+      stars_count: '{count} तारा पकड़ा गया | {count} तारे पकड़े गए',
+      wishes_count: '{count} ख्वाहिश जोड़ी गई | {count} ख्वाहिशें जोड़ी गईं',
+      page_indicator: 'पृष्ठ {current} का {total}'
+    },
+    es: {
+      nav_pip: 'Pip',
+      nav_work: 'Proyectos',
+      nav_story: 'Historia',
+      nav_wall: 'Muro',
+      hero_title: 'Construyo los sueños en los que te quedas dormido.',
+      hero_lede: 'Ingeniero de Sueños Junior en la Guardería de Medianoche. Canciones de cuna, luces nocturnas y entregas en tejados antes del amanecer.',
+      hero_say_hi: 'Saluda a Pip',
+      hero_see_work: 'Mira lo que hizo Pip',
+      hero_fine: 'Los ojos de Pip te siguen. Activa el interruptor de sol y luna para ver la magia.',
+      hero_greeting: '¡Hola! Soy Pip.',
+      work_title: 'Cosas que hizo Pip',
+      work_desc: 'Cinco juguetes del banco de trabajo de Medianoche. Todos son jugables.',
+      lab_desc: 'Una caja de música a la que Pip dio cuerda al revés. Toca las teclas del 1 al 8.',
+      lab_wind: 'Dar cuerda a la caja',
+      lab_endless: 'Canción infinita',
+      lights_desc: 'Elige una linterna y barre la oscura guardería. Cinco pequeños sueños se esconden allí.',
+      blocks_desc: 'Apila los bloques tan alto como la hora de dormir. Toca o presiona Espacio.',
+      blocks_btn: 'Soltar bloque',
+      route_desc: 'Haz scroll para volar sobre los tejados o pulsa el botón.',
+      route_btn: 'Volar la ruta',
+      story_h1: 'El hipo',
+      story_p1: 'Nadie sabe de dónde vino Pip. La enfermera encontró una cesta de ropa, un gorro de dormir gigante y un hipo muy ruidoso. Dentro: Pip sonriendo a la luna.',
+      story_h2: 'Silencio prohibido',
+      story_p2: 'La Guardería de Medianoche tenía una regla: cada fantasma debe dormirse con sonido. Pip vio el silencio y decidió solucionarlo.',
+      story_h3: 'La primera canción',
+      story_p3: 'Pip dio cuerda a una caja vieja al revés. Salieron cinco notas torpes. Once fantasmas bostezaron juntos. Nadie volvió a desvelarse.',
+      story_h4: 'El turno de noche',
+      story_p4: 'Ahora Pip es Ingeniero de Sueños: canciones en el laboratorio, luces en la repisa y sueños entregados por las nubes. Deja la ventana entreabierta.',
+      wall_title: 'El muro de los deseos',
+      wall_desc: 'Deja un deseo a Pip. Pip los lee todos bostezando.',
+      wall_name_label: 'Tu nombre',
+      wall_wish_label: 'Tu deseo',
+      wall_submit: 'Fijar mi deseo',
+      wall_fine: 'Los deseos se guardan únicamente en este dispositivo.',
+      odo_title: 'Sueños entregados esta noche',
+      odo_fine: 'La cuenta propia de Pip, aumentando mientras lees.',
+      Day: 'Día',
+      Night: 'Noche',
+      'Sound on': 'Sonido activado',
+      'Sound off': 'Sonido desactivado',
+      'Turn sound on': 'Activar sonido',
+      'Turn sound off': 'Desactivar sonido',
+      dreams_count: '{count} sueño entregado | {count} sueños entregados',
+      stars_count: '{count} estrella atrapada | {count} estrellas atrapadas',
+      wishes_count: '{count} deseo añadido | {count} deseos añadidos',
+      page_indicator: 'Página {current} de {total}'
+    },
+    fr: {
+      nav_pip: 'Pip',
+      nav_work: 'Projets',
+      nav_story: 'Histoire',
+      nav_wall: 'Mur',
+      hero_title: 'Je construis les rêves dans lesquels vous vous endormez.',
+      hero_lede: 'Ingénieur de Rêves Junior à la Pouponnière de Minuit. Berceuses, veilleuses et livraisons sur les toits avant l’aube.',
+      hero_say_hi: 'Dis bonjour à Pip',
+      hero_see_work: 'Voir les créations de Pip',
+      hero_fine: 'Les yeux de Pip vous suivent. Basculez l’interrupteur soleil et lune pour voir.',
+      hero_greeting: 'Salut ! Je suis Pip.',
+      work_title: 'Choses faites par Pip',
+      work_desc: 'Cinq projets de l’établi de Minuit. Chacun est entièrement jouable.',
+      lab_desc: 'Une boîte à musique remontée à l’envers. Appuyez sur une touche ou les chiffres 1 à 8.',
+      lab_wind: 'Remonter la boîte',
+      lab_endless: 'Berceuse infinie',
+      lights_desc: 'Prenez une lanterne et éclairez la chambre. Cinq petits rêves y sont cachés.',
+      blocks_desc: 'Empilez les blocs aussi haut que l’heure du coucher. Touchez ou appuyez sur Espace.',
+      blocks_btn: 'Lâcher le bloc',
+      route_desc: 'Faites défiler pour faire voler Pip au-dessus des toits, ou cliquez sur le bouton.',
+      route_btn: 'Lancer le vol',
+      story_h1: 'Le hoquet',
+      story_p1: 'Personne ne sait d’où vient Pip. L’infirmière a trouvé un panier à linge, un bonnet deux fois trop grand et un gros hoquet. Dans le panier : Pip souriant à la lune.',
+      story_h2: 'Silence interdit',
+      story_p2: 'La Pouponnière avait une règle : chaque petit fantôme s’endort avec un son. Pip a vu le silence et a décidé d’y remédier.',
+      story_h3: 'La première berceuse',
+      story_p3: 'Pip a remonté une boîte poussiéreuse à l’envers. Cinq notes un peu bancales en sont sorties. Onze fantômes ont bâillé ensemble.',
+      story_h4: 'L’équipe de nuit',
+      story_p4: 'Désormais Pip est Ingénieur de Rêves : berceuses au labo, veilleuses sur l’étagère et rêves livrés par nuage. Laissez votre fenêtre entrouverte.',
+      wall_title: 'Le mur des souhaits',
+      wall_desc: 'Laissez un souhait à Pip. Pip les lit tous en bâillant.',
+      wall_name_label: 'Votre nom',
+      wall_wish_label: 'Votre souhait',
+      wall_submit: 'Épingler mon souhait',
+      wall_fine: 'Les souhaits sont conservés sur cet appareil uniquement.',
+      odo_title: 'Rêves livrés cette nuit',
+      odo_fine: 'Le compteur de Pip qui augmente pendant votre lecture.',
+      Day: 'Jour',
+      Night: 'Nuit',
+      'Sound on': 'Son activé',
+      'Sound off': 'Son désactivé',
+      'Turn sound on': 'Activer le son',
+      'Turn sound off': 'Couper le son',
+      dreams_count: '{count} rêve livré | {count} rêves livrés',
+      stars_count: '{count} étoile attrapée | {count} étoiles attrapées',
+      wishes_count: '{count} vœu ajouté | {count} vœux ajoutés',
+      page_indicator: 'Page {current} sur {total}'
+    },
+    ja: {
+      nav_pip: 'ピップ',
+      nav_work: '作品',
+      nav_story: '物語',
+      nav_wall: '願いの壁',
+      hero_title: 'あなたが眠りに落ちる夢を作っています。',
+      hero_lede: '真夜中の保育園の見習い夢エンジニア。夜明け前に届ける子守唄、常夜灯、そして屋根の上の配達。',
+      hero_say_hi: 'ピップにあいさつ',
+      hero_see_work: 'ピップの作品を見る',
+      hero_fine: 'ピップの瞳があなたを見つめます。太陽と月のスイッチを切り替えてみてください。',
+      hero_greeting: 'やあ！ぼくはピップだよ。',
+      work_title: 'ピップが作ったもの',
+      work_desc: '真夜中の作業台から生まれた5つのおもちゃ。すべて遊べます。',
+      lab_desc: 'ピップが逆に巻いてしまったオルゴール。キーを押すか、1〜8を押してね。',
+      lab_wind: 'オルゴールを巻く',
+      lab_endless: '終わらない子守唄',
+      lights_desc: 'ランタンを選んで暗い部屋を照らそう。5つの小さな夢が隠れているよ。',
+      blocks_desc: 'おやすみの時間まで高くブロックを積もう。タップまたはスペースキーで落とします。',
+      blocks_btn: 'ブロックを落とす',
+      route_desc: 'スクロールして屋根の上を飛ぶか、ボタンを押して眺めよう。',
+      route_btn: 'ルートを飛ぶ',
+      story_h1: 'しゃっくり',
+      story_p1: 'ピップがどこから来たのか誰も知りません。看護師が見つけたのは洗濯カゴ、大きすぎるナイトキャップ、そして大きなしゃっくりでした。カゴの中には月に笑いかけるピップがいました。',
+      story_h2: '静寂は禁止',
+      story_p2: '真夜中の保育園にはルールがありました。みんな何か音を聞きながら眠ること。ピップは静けさを問題だと考え、エンジニアリングすることにしました。',
+      story_h3: '最初の子守唄',
+      story_p3: 'ピップは古いオルゴールのネジを逆に回しました。流れた5つの音に、11人のおばけが一斉にあくびをしました。それ以来、夜更かしする者はいません。',
+      story_h4: '夜勤シフト',
+      story_p4: 'いまピップは見習い夢エンジニア。ラボの子守唄、棚のランタン、雲による夢の配達。今夜は窓を少し開けておいてね。',
+      wall_title: '願いの壁',
+      wall_desc: 'ピップに願いを残してね。あくびをしながら全部読んでいます。',
+      wall_name_label: 'お名前',
+      wall_wish_label: 'あなたの願い',
+      wall_submit: '願いをピン留めする',
+      wall_fine: '願いごとはこの端末にのみ保存されます。',
+      odo_title: '今夜届けられた夢',
+      odo_fine: 'あなたが読んでいる間にも増えていくピップの記録。',
+      Day: '昼',
+      Night: '夜',
+      'Sound on': 'サウンドON',
+      'Sound off': 'サウンドOFF',
+      'Turn sound on': 'サウンドを鳴らす',
+      'Turn sound off': 'サウンドを消す',
+      dreams_count: '{count}件の夢を配達 | {count}件の夢を配達',
+      stars_count: '{count}個の星をキャッチ | {count}個の星をキャッチ',
+      wishes_count: '{count}個の願いを追加 | {count}個の願いを追加',
+      page_indicator: '{total}ページ中{current}ページ'
     }
   };
 
-  var curLang = store.get('lang', 'en');
+  var SUPPORTED = ['en', 'hi', 'es', 'fr', 'ja'];
+
+  function getStore() {
+    if (typeof window !== 'undefined' && window.PIP && window.PIP.store) {
+      return window.PIP.store;
+    }
+    return store;
+  }
+
+  function detectLocale(nav) {
+    var n = nav !== undefined ? nav : (typeof navigator !== 'undefined' ? navigator : null);
+    if (!n) return 'en';
+    var langs = [];
+    if (Array.isArray(n.languages) && n.languages.length > 0) {
+      langs = n.languages;
+    } else if (typeof n.language === 'string' && n.language) {
+      langs = [n.language];
+    } else if (typeof n.userLanguage === 'string' && n.userLanguage) {
+      langs = [n.userLanguage];
+    }
+
+    for (var i = 0; i < langs.length; i++) {
+      var raw = langs[i];
+      if (typeof raw !== 'string') continue;
+      var clean = raw.trim().toLowerCase();
+      var primary = clean.split(/[-_]/)[0];
+      if (primary === 'hi' || clean === 'hi') return 'hi';
+      if (primary === 'en' || clean === 'en') return 'en';
+    }
+    return 'en';
+  }
+
+  function getInitialLang(nav, customStore) {
+    var s = customStore || getStore();
+    var saved = (s && typeof s.get === 'function') ? s.get('lang', null) : null;
+    if (saved && TRANSLATIONS[saved]) {
+      return saved;
+    }
+    return detectLocale(nav);
+  }
+
+  var curLang = getInitialLang();
   if (curLang !== 'en' && curLang !== 'hi') curLang = 'en';
+
+  function interpolate(str, params) {
+    if (typeof str !== 'string' || !params) return str;
+    return str.replace(/\{\s*([a-zA-Z0-9_]+)\s*\}/g, function (match, key) {
+      if (params && params[key] !== undefined && params[key] !== null) {
+        return String(params[key]);
+      }
+      return match;
+    });
+  }
+
+  function getPluralCategory(count, lang) {
+    var num = typeof count === 'number' ? count : Number(count);
+    if (isNaN(num)) return 'other';
+
+    var l = (lang || curLang || 'en').toLowerCase().split(/[-_]/)[0];
+
+    if (typeof Intl !== 'undefined' && Intl.PluralRules) {
+      try {
+        return new Intl.PluralRules(l).select(num);
+      } catch (e) {}
+    }
+
+    if (l === 'hi') {
+      return (num === 0 || num === 1) ? 'one' : 'other';
+    }
+    return num === 1 ? 'one' : 'other';
+  }
+
+  function formatIcuPlural(template, count, lang) {
+    if (typeof template !== 'string') return template;
+    var marker = 'plural,';
+    var maxLoops = 10;
+    while (template.indexOf(marker) !== -1 && maxLoops-- > 0) {
+      var idx = template.indexOf(marker);
+      var openBrace = template.lastIndexOf('{', idx);
+      if (openBrace === -1) break;
+
+      var depth = 1;
+      var closeBrace = -1;
+      for (var i = openBrace + 1; i < template.length; i++) {
+        if (template[i] === '{') depth++;
+        else if (template[i] === '}') {
+          depth--;
+          if (depth === 0) {
+            closeBrace = i;
+            break;
+          }
+        }
+      }
+      if (closeBrace === -1) break;
+
+      var content = template.slice(openBrace + 1, closeBrace);
+      var parts = content.split(/,\s*plural\s*,\s*/);
+      if (parts.length < 2) break;
+
+      var varName = parts[0].trim();
+      var body = parts.slice(1).join(', plural, ');
+      var num = (varName === 'count' && count !== null) ? count : Number(count);
+      if (isNaN(num)) num = 0;
+
+      var branches = {};
+      var bRegex = /(=?\w+)\s*\{([^{}]*)\}/g;
+      var m;
+      while ((m = bRegex.exec(body)) !== null) {
+        branches[m[1]] = m[2];
+      }
+
+      var exact = '=' + num;
+      var chosen = '';
+      if (branches[exact] !== undefined) {
+        chosen = branches[exact];
+      } else if (num === 0 && branches.zero !== undefined) {
+        chosen = branches.zero;
+      } else {
+        var cat = getPluralCategory(num, lang);
+        chosen = branches[cat] || branches.other || branches.one || '';
+      }
+
+      var replacement = chosen.replace(/#/g, String(num));
+      template = template.slice(0, openBrace) + replacement + template.slice(closeBrace + 1);
+    }
+    return template;
+  }
 
   function apply(lang) {
     if (!TRANSLATIONS[lang]) lang = 'en';
     curLang = lang;
-    store.set('lang', lang);
+    getStore().set('lang', lang);
 
     if (typeof document === 'undefined') return;
     document.documentElement.setAttribute('lang', lang);
@@ -114,7 +391,15 @@
     for (var i = 0; i < elements.length; i++) {
       var el = elements[i];
       var key = el.getAttribute('data-i18n');
-      if (dict[key]) {
+      var countAttr = el.getAttribute('data-i18n-count');
+      var params = null;
+      if (countAttr !== null && !isNaN(Number(countAttr))) {
+        params = { count: Number(countAttr) };
+      }
+      var res = t(key, params);
+      if (res && res !== key) {
+        el.textContent = res;
+      } else if (dict[key]) {
         el.textContent = dict[key];
       }
     }
@@ -128,7 +413,7 @@
       label.textContent = lang === 'hi' ? 'हिन्दी' : 'EN';
     }
 
-    if (typeof document.dispatchEvent === 'function') {
+    if (typeof document !== 'undefined' && typeof document.dispatchEvent === 'function') {
       try {
         var ev = (typeof CustomEvent === 'function')
           ? new CustomEvent('pip-language-change', { detail: { lang: lang } })
@@ -148,18 +433,152 @@
     }
   }
 
-  function t(text) {
-    if (!text) return '';
-    var dict = TRANSLATIONS[curLang] || TRANSLATIONS.en;
-    return (dict && dict[text]) ? dict[text] : text;
+  function t(key, params, extra) {
+    if (!key) return '';
+    var dict = TRANSLATIONS[curLang] || TRANSLATIONS.en || {};
+    var entry = (typeof key === 'string') ? dict[key] : key;
+
+    if (entry === undefined && typeof key === 'string') {
+      if (TRANSLATIONS.en && TRANSLATIONS.en[key] !== undefined) {
+        entry = TRANSLATIONS.en[key];
+      } else {
+        entry = key;
+      }
+    }
+
+    // Determine count and param object
+    var count = null;
+    var paramObj = null;
+
+    if (typeof params === 'number') {
+      count = params;
+      paramObj = { count: params };
+      if (typeof extra === 'function') {
+        paramObj.plural = extra;
+      }
+    } else if (typeof params === 'function') {
+      paramObj = { plural: params };
+    } else if (params && typeof params === 'object') {
+      paramObj = Object.assign({}, params);
+      if (typeof paramObj.count === 'number') count = paramObj.count;
+      else if (typeof paramObj.n === 'number') count = paramObj.n;
+      else if (typeof paramObj.num === 'number') count = paramObj.num;
+      else if (typeof paramObj.count === 'string' && !isNaN(Number(paramObj.count))) {
+        count = Number(paramObj.count);
+      }
+    } else if (typeof params === 'string') {
+      paramObj = { count: params, value: params };
+      if (!isNaN(Number(params))) count = Number(params);
+    }
+
+    if (typeof extra === 'function' && paramObj) {
+      paramObj.plural = extra;
+    }
+
+    // If entry is a function
+    if (typeof entry === 'function') {
+      entry = entry(paramObj || count, curLang);
+    }
+
+    // If paramObj has custom plural function
+    if (paramObj && typeof paramObj.plural === 'function' && count !== null) {
+      var customRes = paramObj.plural(count, curLang);
+      if (customRes !== undefined && customRes !== null) {
+        entry = customRes;
+      }
+    }
+
+    // If entry is an object of plural forms: { zero, one, other } or { singular, plural }
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      var num = count !== null ? count : 0;
+      var cat = getPluralCategory(num, curLang);
+      var chosen = null;
+      if (num === 0 && entry.zero !== undefined) {
+        chosen = entry.zero;
+      } else if (entry[cat] !== undefined) {
+        chosen = entry[cat];
+      } else if (cat === 'one' && entry.singular !== undefined) {
+        chosen = entry.singular;
+      } else if (cat === 'other' && entry.plural !== undefined) {
+        chosen = entry.plural;
+      } else {
+        chosen = entry.other !== undefined ? entry.other
+          : (entry.one !== undefined ? entry.one
+          : (entry.plural !== undefined ? entry.plural
+          : (entry.singular !== undefined ? entry.singular
+          : Object.values(entry)[0])));
+      }
+      entry = chosen !== undefined ? chosen : '';
+    }
+
+    if (typeof entry === 'string') {
+      // Pipe-delimited plural forms: "singular | plural" or "zero | singular | plural"
+      if (entry.indexOf('|') !== -1 && count !== null) {
+        var parts = entry.split('|').map(function (s) { return s.trim(); });
+        if (parts.length === 2) {
+          entry = (count === 1) ? parts[0] : parts[1];
+        } else if (parts.length >= 3) {
+          entry = (count === 0) ? parts[0] : ((count === 1) ? parts[1] : parts[2]);
+        }
+      }
+
+      // ICU plural format
+      if (entry.indexOf('plural') !== -1 && entry.indexOf('{') !== -1) {
+        entry = formatIcuPlural(entry, count, curLang);
+      }
+
+      // Parameter interpolation
+      if (paramObj) {
+        entry = interpolate(entry, paramObj);
+      }
+    }
+
+    return entry;
+  }
+
+  function plural(count, forms, lang) {
+    var num = typeof count === 'number' ? count : Number(count);
+    if (isNaN(num)) num = 0;
+
+    if (typeof forms === 'string' && arguments.length >= 3 && typeof arguments[2] === 'string') {
+      var singular = forms;
+      var pluralStr = arguments[2];
+      var chosenStr = (num === 1) ? singular : pluralStr;
+      if (chosenStr.indexOf('{count}') !== -1) {
+        return interpolate(chosenStr, { count: num });
+      }
+      return num + ' ' + chosenStr;
+    }
+
+    var targetLang = (typeof lang === 'string' && lang) ? lang : curLang;
+    var prevLang = curLang;
+    if (targetLang !== curLang && TRANSLATIONS[targetLang]) {
+      curLang = targetLang;
+    }
+
+    var res;
+    if (typeof forms === 'object' && forms !== null) {
+      res = t(forms, { count: num });
+    } else if (typeof forms === 'string') {
+      res = t(forms, { count: num });
+    } else if (typeof forms === 'function') {
+      res = forms(num, curLang);
+    } else {
+      res = String(num);
+    }
+
+    curLang = prevLang;
+    return res;
   }
 
   function toggle() {
-    apply(curLang === 'hi' ? 'en' : 'hi');
+    var nextIdx = (SUPPORTED.indexOf(curLang) + 1) % SUPPORTED.length;
+    apply(SUPPORTED[nextIdx]);
   }
 
   function init() {
     if (typeof document === 'undefined') return;
+    curLang = getInitialLang();
     var btn = document.getElementById('langBtn');
     if (btn) {
       btn.addEventListener('click', toggle);
@@ -170,15 +589,24 @@
   var i18nModule = {
     init: init,
     apply: apply,
+    setLanguage: apply,
     toggle: toggle,
     t: t,
+    interpolate: interpolate,
+    detectLocale: detectLocale,
+    getInitialLang: getInitialLang,
+    getPluralRule: getPluralCategory,
+    selectPlural: getPluralCategory,
+    plural: plural,
     getLang: function () { return curLang; },
+    SUPPORTED: SUPPORTED,
     TRANSLATIONS: TRANSLATIONS
   };
 
   if (hasWindow) {
     window.PIP = window.PIP || {};
     window.PIP.i18n = i18nModule;
+    window.PIP.t = t;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

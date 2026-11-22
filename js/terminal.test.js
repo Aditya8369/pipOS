@@ -303,3 +303,107 @@ test('initTerminal handles Tab and Shift-Tab cycling in-place and updates cursor
     delete global.document;
   }
 });
+
+test('Terminal command history navigation cycles with ArrowUp and ArrowDown and restores pending buffer', () => {
+  const termSrc = fs.readFileSync(TERM_JS_PATH, 'utf8');
+  assert.match(termSrc, /cmdHistory\s*=\s*\[\]/, 'js/terminal.js must define cmdHistory array');
+  assert.match(termSrc, /historyIdx\s*=\s*-1/, 'js/terminal.js must define historyIdx = -1 pointer');
+
+  const term = require(TERM_JS_PATH);
+
+  let keydownHandler = null;
+  let selectionStart = -1, selectionEnd = -1;
+
+  const mockInput = {
+    value: '',
+    focus() {},
+    setSelectionRange(start, end) {
+      selectionStart = start;
+      selectionEnd = end;
+    },
+    addEventListener(event, fn) {
+      if (event === 'keydown') keydownHandler = fn;
+    }
+  };
+
+  const mockGhost = { innerHTML: '' };
+  const mockSuggestions = {
+    innerHTML: '',
+    children: [],
+    classList: { add() {}, remove() {} },
+    appendChild(child) { this.children.push(child); }
+  };
+  const mockScreen = {
+    appendChild() {},
+    parentElement: { addEventListener() {} }
+  };
+  const mockWin = { id: 'terminal' };
+
+  global.window = global.window || {};
+  global.document = {
+    readyState: 'complete',
+    getElementById(id) {
+      if (id === 'terminal') return mockWin;
+      if (id === 'termScreen') return mockScreen;
+      if (id === 'termInput') return mockInput;
+      if (id === 'termGhost') return mockGhost;
+      if (id === 'termSuggestions') return mockSuggestions;
+      return null;
+    },
+    querySelector(sel) { return this.getElementById(sel.replace('#', '')); },
+    querySelectorAll() { return []; },
+    createElement() {
+      return {
+        className: '', textContent: '', innerHTML: '', attributes: {}, listeners: {},
+        setAttribute(k, v) { this.attributes[k] = v; },
+        appendChild() {}, addEventListener() {}
+      };
+    }
+  };
+
+  try {
+    term.init();
+    assert.strictEqual(typeof keydownHandler, 'function', 'Must register keydown handler');
+
+    // Execute two distinct commands
+    term.executeCommand('whoami');
+    term.executeCommand('time');
+
+    // Simulate user typing a pending command before pressing ArrowUp
+    mockInput.value = 'cal';
+
+    // Press ArrowUp: should save pending 'cal' and navigate to latest command 'time'
+    keydownHandler({
+      key: 'ArrowUp',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'time', 'ArrowUp must load latest command "time"');
+    assert.strictEqual(selectionEnd, 4, 'Cursor must be at the end of "time" via setSelectionRange');
+
+    // Press ArrowUp again: should navigate to earlier command 'whoami'
+    keydownHandler({
+      key: 'ArrowUp',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'whoami', 'ArrowUp must load earlier command "whoami"');
+    assert.strictEqual(selectionEnd, 6, 'Cursor must be at the end of "whoami" via setSelectionRange');
+
+    // Press ArrowDown: should navigate forward to 'time'
+    keydownHandler({
+      key: 'ArrowDown',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'time', 'ArrowDown must navigate forward to "time"');
+    assert.strictEqual(selectionEnd, 4, 'Cursor must be at the end of "time"');
+
+    // Press ArrowDown again: should restore pending buffer 'cal' at index -1
+    keydownHandler({
+      key: 'ArrowDown',
+      preventDefault() {}
+    });
+    assert.strictEqual(mockInput.value, 'cal', 'ArrowDown past newest command must restore pending buffer "cal"');
+    assert.strictEqual(selectionEnd, 3, 'Cursor must be at the end of restored pending buffer "cal"');
+  } finally {
+    delete global.document;
+  }
+});

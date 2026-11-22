@@ -65,3 +65,288 @@ test('Catch the Falling Stars: index.html markup and accessibility contract', ()
   assert.ok(html.includes('src="js/stars.js"'), 'index.html must load js/stars.js');
 });
 
+test('Catch the Falling Stars: Golden Comet Star archetype properties and power-up', () => {
+  assert.strictEqual(STARS_CONFIG.COMET_CHANCE, 0.05, 'Golden Comet Star must have 5% spawn chance');
+  assert.strictEqual(STARS_CONFIG.BOOST_DURATION, 6000, 'Cloud basket width boost must last 6 seconds');
+  assert.ok(STARS_CONFIG.CLOUD_W_BOOST > STARS_CONFIG.CLOUD_W, 'Boosted cloud width must be wider than normal');
+
+  const { initStars } = require('./stars.js');
+  const mockCanvas = {
+    getContext: () => ({
+      scale: () => {},
+      clearRect: () => {},
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      fillRect: () => {},
+      rect: () => {},
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      fill: () => {},
+      stroke: () => {},
+      translate: () => {},
+      rotate: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {}
+    }),
+    addEventListener: () => {},
+    getBoundingClientRect: () => ({ left: 0, width: 300 })
+  };
+  global.document = {
+    getElementById: (id) => (id === 'starsCanvas' ? mockCanvas : { textContent: '', setAttribute: () => {}, classList: { add: () => {}, remove: () => {} }, addEventListener: () => {} })
+  };
+  global.window = {
+    devicePixelRatio: 1,
+    addEventListener: () => {}
+  };
+  global.requestAnimationFrame = () => 1;
+  global.cancelAnimationFrame = () => {};
+
+  try {
+    const game = initStars();
+    assert.ok(game && game.state, 'initStars must return game instance with state');
+
+    // Spawn forced comet star
+    const comet = game.spawnStar('comet');
+    assert.strictEqual(comet.type, 'comet', 'Must spawn comet star');
+    assert.strictEqual(comet.color, '#ffd700', 'Comet star must be golden');
+    assert.strictEqual(comet.scoreBonus, 3, 'Comet star must have +3 scoreBonus');
+
+    // Catch comet star simulation
+    game.state.running = true;
+    game.state.score = 0;
+    game.state.combo = 0;
+    game.state.stars = [comet];
+    comet.x = game.state.cloud.x + 10;
+    comet.y = game.state.cloud.y + 5;
+
+    game.update();
+
+    // Catching comet awards base (10 + 0*2) + 3 = 13 points
+    assert.strictEqual(game.state.score, 13, 'Comet catch must award 10 base + 3 bonus points');
+    assert.strictEqual(game.state.cloud.isWide, true, 'Comet catch must activate wide cloud basket');
+    assert.strictEqual(game.state.cloud.w, STARS_CONFIG.CLOUD_W_BOOST, 'Cloud width must widen during power-up');
+    assert.ok(game.state.cloud.wideUntil > Date.now(), 'wideUntil must be scheduled in future');
+  } finally {
+    delete global.document;
+    delete global.window;
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+  }
+});
+
+test('Catch the Falling Stars: Slumber Moon Crystal recovers 1 miss', () => {
+  assert.strictEqual(STARS_CONFIG.CRYSTAL_CHANCE, 0.03, 'Slumber Moon Crystal must have 3% spawn chance');
+
+  const { initStars } = require('./stars.js');
+  const mockCanvas = {
+    getContext: () => ({
+      scale: () => {},
+      clearRect: () => {},
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      fillRect: () => {},
+      rect: () => {},
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      fill: () => {},
+      stroke: () => {},
+      translate: () => {},
+      rotate: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {}
+    }),
+    addEventListener: () => {},
+    getBoundingClientRect: () => ({ left: 0, width: 300 })
+  };
+  global.document = {
+    getElementById: (id) => (id === 'starsCanvas' ? mockCanvas : { textContent: '', setAttribute: () => {}, classList: { add: () => {}, remove: () => {} }, addEventListener: () => {} })
+  };
+  global.window = { devicePixelRatio: 1, addEventListener: () => {} };
+  global.requestAnimationFrame = () => 1;
+  global.cancelAnimationFrame = () => {};
+
+  try {
+    const game = initStars();
+    const crystal = game.spawnStar('crystal');
+    assert.strictEqual(crystal.type, 'crystal', 'Must spawn crystal star');
+
+    game.state.running = true;
+    game.state.misses = 2;
+    game.state.stars = [crystal];
+    crystal.x = game.state.cloud.x + 10;
+    crystal.y = game.state.cloud.y + 5;
+
+    game.update();
+
+    assert.strictEqual(game.state.misses, 1, 'Catching Slumber Moon Crystal must recover 1 miss (decrements state.misses)');
+  } finally {
+    delete global.document;
+    delete global.window;
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+  }
+});
+
+test('Catch the Falling Stars: dynamic particle bursts with combo-scaled palettes', () => {
+  const { getComboPalette, STARS_CONFIG } = require('./stars.js');
+  assert.strictEqual(typeof getComboPalette, 'function', 'Must export getComboPalette helper');
+
+  // Combo tier palette progressions
+  const tier1 = getComboPalette(1);
+  const tier2 = getComboPalette(4);
+  const tier3 = getComboPalette(7);
+  const supernova = getComboPalette(12);
+
+  assert.deepStrictEqual(tier1, STARS_CONFIG.COMBO_PALETTES.tier1);
+  assert.deepStrictEqual(tier2, STARS_CONFIG.COMBO_PALETTES.tier2);
+  assert.deepStrictEqual(tier3, STARS_CONFIG.COMBO_PALETTES.tier3);
+  assert.deepStrictEqual(supernova, STARS_CONFIG.COMBO_PALETTES.supernova);
+
+  // Archetype special palettes
+  const cometPal = getComboPalette(0, 'comet');
+  const crystalPal = getComboPalette(0, 'crystal');
+  assert.deepStrictEqual(cometPal, STARS_CONFIG.COMBO_PALETTES.comet);
+  assert.deepStrictEqual(crystalPal, STARS_CONFIG.COMBO_PALETTES.crystal);
+});
+
+test('Catch the Falling Stars: Pause and Resume game preserves score, misses, stars, and state', () => {
+  const { initStars } = require('./stars.js');
+  const listeners = {};
+  const mockCanvas = {
+    getContext: () => ({
+      scale: () => {},
+      clearRect: () => {},
+      createLinearGradient: () => ({ addColorStop: () => {} }),
+      fillRect: () => {},
+      rect: () => {},
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      arc: () => {},
+      fill: () => {},
+      stroke: () => {},
+      translate: () => {},
+      rotate: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {}
+    }),
+    addEventListener: (type, cb) => { listeners[type] = cb; },
+    getBoundingClientRect: () => ({ left: 0, width: 300 })
+  };
+
+  const elements = {};
+  function makeElem(id) {
+    return {
+      id,
+      textContent: '',
+      setAttribute: () => {},
+      classList: {
+        add: () => {},
+        remove: () => {},
+        contains: () => false
+      },
+      addEventListener: (type, cb) => {
+        listeners[id + ':' + type] = cb;
+      }
+    };
+  }
+
+  global.document = {
+    getElementById: (id) => {
+      if (id === 'starsCanvas') return mockCanvas;
+      if (!elements[id]) elements[id] = makeElem(id);
+      return elements[id];
+    }
+  };
+  global.window = { devicePixelRatio: 1, addEventListener: () => {} };
+  global.requestAnimationFrame = () => 1;
+  global.cancelAnimationFrame = () => {};
+
+  try {
+    const game = initStars();
+    const actionBtn = elements['starsActionBtn'];
+    const clickAction = listeners['starsActionBtn:click'];
+    const keydownCanvas = listeners['keydown'];
+
+    // 1. Initial click starts the game
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, false);
+
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+
+    // Accumulate in-game progress
+    game.state.score = 75;
+    game.state.misses = 1;
+    game.state.combo = 4;
+    const testStar = game.spawnStar('comet');
+    game.state.cloud.wideUntil = Date.now() + 4000;
+    assert.strictEqual(game.state.stars.length, 1);
+
+    // 2. Pause the game via action button click
+    clickAction();
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, true);
+    assert.strictEqual(actionBtn.textContent, 'Resume Game');
+    assert.strictEqual(game.state.score, 75, 'Score must not be modified on pause');
+    assert.strictEqual(game.state.misses, 1, 'Misses must not be modified on pause');
+    assert.strictEqual(game.state.combo, 4, 'Combo must not be modified on pause');
+    assert.strictEqual(game.state.stars.length, 1, 'Active stars must remain on canvas on pause');
+    assert.ok(game.state.cloud.remainingWideTime > 0, 'Remaining wide power-up time must be preserved');
+
+    // 3. Resume the game via action button click
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+    assert.strictEqual(game.state.score, 75, 'Score must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.misses, 1, 'Misses must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.combo, 4, 'Combo must NOT reset to 0 upon resuming game');
+    assert.strictEqual(game.state.stars.length, 1, 'Active stars must NOT be cleared upon resuming game');
+    assert.strictEqual(game.state.stars[0], testStar);
+    assert.ok(game.state.cloud.wideUntil > Date.now(), 'Wide power-up boost must resume with remaining time');
+
+    // 4. Pause and resume via keyboard controls (Space/Enter)
+    keydownCanvas({ key: ' ', preventDefault: () => {} });
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, true);
+    assert.strictEqual(actionBtn.textContent, 'Resume Game');
+
+    keydownCanvas({ key: 'Enter', preventDefault: () => {} });
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.score, 75);
+    assert.strictEqual(actionBtn.textContent, 'Pause Game');
+
+    // 5. Game Over transition properly resets state on Play Again
+    game.triggerGameOver();
+    assert.strictEqual(game.state.running, false);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, true);
+    assert.strictEqual(actionBtn.textContent, 'Play Again');
+
+    // Clicking Play Again starts a new game
+    clickAction();
+    assert.strictEqual(game.state.running, true);
+    assert.strictEqual(game.state.paused, false);
+    assert.strictEqual(game.state.gameOver, false);
+    assert.strictEqual(game.state.score, 0, 'New game after game over must reset score');
+    assert.strictEqual(game.state.misses, 0, 'New game after game over must reset misses');
+    assert.strictEqual(game.state.combo, 0, 'New game after game over must reset combo');
+    assert.strictEqual(game.state.stars.length, 0, 'New game after game over must reset stars');
+  } finally {
+    delete global.document;
+    delete global.window;
+    delete global.requestAnimationFrame;
+    delete global.cancelAnimationFrame;
+  }
+});
+

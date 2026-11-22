@@ -2,7 +2,7 @@
    Provides offline functionality, pre-caches essential local assets,
    serves cached offline fallbacks, and handles Google Fonts degradation. */
 
-var CACHE_NAME = 'pipos-v2';
+var CACHE_NAME = 'pipos-v4';
 
 var PRECACHE_ASSETS = [
   './',
@@ -10,6 +10,8 @@ var PRECACHE_ASSETS = [
   'manifest.webmanifest',
   'css/style.css',
   'js/util.js',
+  'js/security.js',
+  'js/vault.js',
   'js/audio.js',
   'js/wall.js',
   'js/fx.js',
@@ -17,16 +19,41 @@ var PRECACHE_ASSETS = [
   'js/stickers.js',
   'js/pip.js',
   'js/toys.js',
+  'js/rattle.js',
+  'js/vfs.js',
+  'js/man.js',
   'js/terminal.js',
+  'js/stars.js',
   'js/taskbar.js',
+  'js/task-switcher.js',
   'js/monitor.js',
   'js/notes.js',
+  'js/pwa.js',
+  'js/desktop.js',
+  'js/synth.js',
+  'js/window-manager.js',
+  'js/calc.js',
+  'js/dressup.js',
+  'js/flashlight.js',
+  'js/constellations.js',
+  'js/perf.js',
+  'js/converter.js',
+  'js/soundboard.js',
+  'js/contrast.js',
+  'js/scope.js',
+  'js/dimmer.js',
+  'js/a11y-earcons.js',
+
+  'js/bubbles.js',
+  'js/crash-reporter.js',
   'js/main.js',
   'assets/favicon.svg',
   'assets/icon-192.png',
   'assets/icon-512.png',
   'assets/icon-maskable-512.png',
-  'assets/apple-touch-icon.png'
+  'assets/apple-touch-icon.png',
+  'css/boot.css',
+'js/boot.js',
 ];
 
 var swScope = typeof self !== 'undefined' ? self : (typeof globalThis !== 'undefined' ? globalThis : this);

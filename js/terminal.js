@@ -27,9 +27,13 @@
   var toast = PIP.toast || function () {};
 
   var COMMANDS = [
-    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet',
-    'play', 'wish', 'fortune', 'dream', 'calc', 'clear', 'history'
+    'help', 'whoami', 'time', 'date', 'theme', 'sound', 'quiet', 'sleep',
+    'play', 'wish', 'fortune', 'dream', 'calc', 'blocks', 'clear', 'history',
+    'ls', 'cd', 'pwd', 'cat', 'mkdir', 'touch', 'rm',
+    'echo', 'grep', 'wc', 'sort', 'uniq', 'head', 'tail', 'crt'
   ];
+
+  var currentCwd = '/home/pip';
 
   var FORTUNES = [
     "A star falls only when a dreamer needs a bedtime flashlight.",
@@ -39,8 +43,10 @@
     "Sleep is the gentle machine that rewinds tomorrow's wonders."
   ];
 
-  var history = [];
-  var historyIndex = -1;
+  var cmdHistory = [];
+  var historyIdx = -1;
+  var pendingBuffer = '';
+  var history = cmdHistory;
 
   function sanitize(str) {
     if (!str) return '';
@@ -64,12 +70,20 @@
     return PIP;
   }
 
-  function executeCommand(input) {
-    var raw = input ? input.trim() : '';
-    if (!raw) return { ok: true, output: '' };
+  function getFS() {
+    var p = getPIP();
+    if (p && p.fs) return p.fs;
+    if (typeof global !== 'undefined' && global.PIP && global.PIP.fs) return global.PIP.fs;
+    if (typeof window !== 'undefined' && window.PIP && window.PIP.fs) return window.PIP.fs;
+    if (typeof require !== 'undefined') {
+      try { return require('./vfs.js'); } catch (e) {}
+    }
+    return null;
+  }
 
-    history.push(raw);
-    historyIndex = history.length;
+  function executeSingle(rawInput, pipedInput) {
+    var raw = rawInput ? rawInput.trim() : '';
+    if (!raw) return { ok: true, output: '' };
 
     var parts = raw.split(/\s+/);
     var cmd = parts[0].toLowerCase();
@@ -86,10 +100,13 @@
           "  theme [t]          - Get or set theme ('day', 'night', 'contrast')",
           "  sound [on|off]     - Check or toggle audio synthesizer",
           "  quiet [on|off]     - Check or toggle quiet mode",
+          "  sleep [minutes]    - Bedtime timer with gradual lullaby fade-out",
           "  play [chime|lullaby] - Synthesize Web Audio melody",
           "  wish <text>        - Post a wish to the wish wall",
           "  fortune / dream    - Read a midnight prophecy",
           "  calc <expr>        - Quick arithmetic evaluator (e.g., calc 24 * 7)",
+          "  blocks [stats|export] - View or export Rattle & Blocks tower records",
+          "  man <cmd>          - Format and display reference manual page",
           "  history            - Display recent command history",
           "  clear              - Wipe terminal screen"
         ].join('\n');
@@ -152,6 +169,46 @@
         var qBtn = document.getElementById('quietBtn');
         if (qBtn) qBtn.click();
         out = "Quiet mode toggled.";
+        break;
+
+      case 'sleep':
+        var pipObj = getPIP();
+        var pipAudio = (pipObj && pipObj.audio) || audio;
+        if (!pipAudio || typeof pipAudio.startSleepTimer !== 'function') {
+          if (typeof require !== 'undefined') {
+            try { pipAudio = require('./audio.js'); } catch (e) {}
+          }
+        }
+        if (args.length === 0) {
+          var remaining = (pipAudio && typeof pipAudio.getSleepTimerRemaining === 'function')
+            ? pipAudio.getSleepTimerRemaining()
+            : 0;
+          if (remaining > 0) {
+            var minsLeft = Math.ceil(remaining / 60);
+            out = "Bedtime sleep timer is active: ~" + minsLeft + " minute" + (minsLeft === 1 ? '' : 's') + " remaining (" + remaining + "s).";
+          } else {
+            out = "Usage: sleep [minutes]\nSets a bedtime timer that gradually fades audio before putting Pip to sleep.";
+          }
+        } else if (args[0] === 'stop' || args[0] === 'cancel' || args[0] === 'off') {
+          if (pipAudio && typeof pipAudio.stopSleepTimer === 'function') {
+            pipAudio.stopSleepTimer();
+            out = "Bedtime sleep timer cancelled.";
+          } else {
+            out = "No active sleep timer.";
+          }
+        } else {
+          var minutes = parseFloat(args[0]);
+          if (isNaN(minutes) || minutes <= 0) {
+            out = "Usage: sleep [minutes] (e.g. sleep 15, sleep 1)";
+          } else {
+            if (pipAudio && typeof pipAudio.startSleepTimer === 'function') {
+              pipAudio.startSleepTimer(minutes);
+              out = "🌙 Bedtime sleep timer set for " + minutes + " minute" + (minutes === 1 ? '' : 's') + ". Audio will fade out gently before bedtime.";
+            } else {
+              out = "Audio system unavailable.";
+            }
+          }
+        }
         break;
 
       case 'play':
@@ -222,12 +279,404 @@
         }
         break;
 
+      case 'pwd':
+        out = currentCwd;
+        break;
+
+      case 'cd':
+        var vfsCd = getFS();
+        var targetCd = args[0] || '/home/pip';
+        var resolvedCd = vfsCd ? vfsCd.resolvePath(currentCwd, targetCd) : targetCd;
+        if (vfsCd && !vfsCd.isDirectory(resolvedCd)) {
+          out = 'cd: no such directory: ' + targetCd;
+        } else {
+          currentCwd = resolvedCd;
+          out = '';
+        }
+        break;
+
+      case 'ls':
+        var vfsLs = getFS();
+        if (!vfsLs) {
+          out = 'desktop  documents';
+        } else {
+          var targetLs = args[0] ? vfsLs.resolvePath(currentCwd, args[0]) : currentCwd;
+          try {
+            var entries = vfsLs.readDir(targetLs);
+            out = entries.map(function (e) {
+              return (e.type === 'dir' ? '📁 ' : '📄 ') + e.name + (e.type === 'file' ? ' (' + e.size + ' B)' : '/');
+            }).join('\n') || '(empty directory)';
+          } catch (e) {
+            out = 'ls: ' + (e.message || 'error');
+          }
+        }
+        break;
+
+      case 'cat':
+        var vfsCat = getFS();
+        if (!args[0]) {
+          if (pipedInput !== null) {
+            out = pipedInput;
+          } else {
+            out = 'Usage: cat <file>';
+          }
+        } else if (!vfsCat) {
+          out = 'cat: file system not ready';
+        } else {
+          try {
+            var targetCat = vfsCat.resolvePath(currentCwd, args[0]);
+            out = vfsCat.readFile(targetCat);
+          } catch (e) {
+            out = 'cat: ' + (e.message || 'error reading file');
+          }
+        }
+        break;
+
+      case 'touch':
+        var vfsTouch = getFS();
+        if (!args[0]) {
+          out = 'Usage: touch <file>';
+        } else if (vfsTouch) {
+          try {
+            var targetTouch = vfsTouch.resolvePath(currentCwd, args[0]);
+            vfsTouch.writeFile(targetTouch, '');
+            out = 'Created ' + args[0];
+          } catch (e) {
+            out = 'touch: ' + (e.message || 'error');
+          }
+        }
+        break;
+
+      case 'mkdir':
+        var vfsMkdir = getFS();
+        if (!args[0]) {
+          out = 'Usage: mkdir <directory>';
+        } else if (vfsMkdir) {
+          try {
+            var targetMkdir = vfsMkdir.resolvePath(currentCwd, args[0]);
+            vfsMkdir.mkdir(targetMkdir);
+            out = 'Directory created: ' + args[0];
+          } catch (e) {
+            out = 'mkdir: ' + (e.message || 'error');
+          }
+        }
+        break;
+
+      case 'rm':
+        var vfsRm = getFS();
+        if (!args[0]) {
+          out = 'Usage: rm <file>';
+        } else if (vfsRm) {
+          try {
+            var targetRm = vfsRm.resolvePath(currentCwd, args[0]);
+            vfsRm.unlink(targetRm);
+            out = 'Removed ' + args[0];
+          } catch (e) {
+            out = 'rm: ' + (e.message || 'error');
+          }
+        }
+        break;
+      case 'blocks':
+        var sub = args[0] ? args[0].toLowerCase() : 'stats';
+        var pipObj = getPIP();
+        if (sub === 'export') {
+          var exporter = (pipObj.toys && typeof pipObj.toys.exportScores === 'function')
+            ? pipObj.toys.exportScores
+            : (typeof require !== 'undefined' ? (function () {
+                try { return require('./toys.js').exportScores; } catch (e) { return null; }
+              })() : null);
+          if (typeof exporter === 'function') {
+            out = exporter();
+          } else {
+            out = "pip-blocks: Score export not available.";
+          }
+        } else if (sub === 'stats') {
+          var curStore = (pipObj && pipObj.store) ? pipObj.store : store;
+          var curBest = curStore.get('best', '0');
+          var topScores = [];
+          try {
+            var raw = curStore.get('blockTopScores', '[]');
+            topScores = JSON.parse(raw);
+          } catch (e) {}
+          if (!Array.isArray(topScores)) topScores = [];
+
+          var lines = [
+            "🧱 Rattle & Blocks Stacking Statistics:",
+            "  Personal Best: " + curBest + " blocks"
+          ];
+          if (topScores.length > 0) {
+            lines.push("  Top Leaderboard Records:");
+            topScores.forEach(function (score, idx) {
+              lines.push("    #" + (idx + 1) + " — " + score + " pts");
+            });
+          } else {
+            lines.push("  Top Leaderboard Records: None recorded yet.");
+          }
+          out = lines.join('\n');
+        } else if (sub === 'import') {
+          var jsonStr = args.slice(1).join(' ');
+          if (!jsonStr) {
+            out = "Usage: blocks import <json>";
+          } else {
+            var importer = (pipObj.toys && typeof pipObj.toys.importScores === 'function')
+              ? pipObj.toys.importScores
+              : (typeof require !== 'undefined' ? (function () {
+                  try { return require('./toys.js').importScores; } catch (e) { return null; }
+                })() : null);
+            if (typeof importer === 'function') {
+              var ok = importer(jsonStr);
+              out = ok ? "✨ Stacking records imported successfully!" : "pip-blocks: Invalid score data.";
+            } else {
+              out = "pip-blocks: Score import not available.";
+            }
+          }
+        } else {
+          out = "Usage: blocks [stats|export]";
+        }
+        break;
+
       case 'history':
         out = history.map(function (h, i) { return (i + 1) + '  ' + h; }).join('\n');
         break;
 
+      case 'man':
+        if (!args[0]) {
+          out = "What manual page do you want?\nFor example, try 'man ls' or 'man cat'.";
+        } else {
+          var entry = (typeof PipMan !== 'undefined' ? PipMan.getManPage(args[0]) : null);
+          out = entry || ("No manual entry for " + args[0]);
+        }
+        break;
+
       case 'clear':
         return { ok: true, clear: true, output: '' };
+
+      case 'crt':
+        var crtArg = args[0] ? args[0].toLowerCase() : '';
+        var curCrt = (typeof document !== 'undefined' && document.body && document.body.classList)
+          ? document.body.classList.contains('crt-active')
+          : false;
+        var nextCrt;
+        if (crtArg === 'on') {
+          nextCrt = true;
+        } else if (crtArg === 'off') {
+          nextCrt = false;
+        } else {
+          nextCrt = !curCrt;
+        }
+        var storeCrt = (typeof window !== 'undefined' && window.PIP && window.PIP.store)
+          ? window.PIP.store
+          : (typeof global !== 'undefined' && global.window && global.window.PIP && global.window.PIP.store ? global.window.PIP.store : null);
+        if (storeCrt && typeof storeCrt.set === 'function') {
+          storeCrt.set('crt_mode', String(nextCrt));
+        }
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+          document.body.classList.toggle('crt-active', nextCrt);
+          if (typeof document.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+            document.dispatchEvent(new CustomEvent('pip-crt-toggle', { detail: { active: nextCrt } }));
+          }
+        }
+        out = "CRT Scanlines: " + (nextCrt ? "ON" : "OFF");
+        break;
+
+      case 'echo':
+        var echoText = args.join(' ');
+        if (!echoText && pipedInput !== null) {
+          out = pipedInput;
+        } else {
+          if ((echoText.startsWith('"') && echoText.endsWith('"')) ||
+              (echoText.startsWith("'") && echoText.endsWith("'"))) {
+            echoText = echoText.slice(1, -1);
+          }
+          echoText = echoText.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+          out = echoText;
+        }
+        break;
+
+      case 'grep':
+        if (args.length === 0) {
+          out = 'Usage: grep [-i] [-v] <pattern> [file]';
+        } else {
+          var ignoreCase = false;
+          var invert = false;
+          var patternStr = null;
+          var fileArg = null;
+
+          for (var gi = 0; gi < args.length; gi++) {
+            if (args[gi] === '-i') ignoreCase = true;
+            else if (args[gi] === '-v') invert = true;
+            else if (!patternStr) patternStr = args[gi];
+            else if (!fileArg) fileArg = args[gi];
+          }
+
+          if (!patternStr) {
+            out = 'grep: missing pattern';
+          } else {
+            var textToGrep = '';
+            var vfs = getFS();
+            if (fileArg && vfs) {
+              try {
+                textToGrep = vfs.readFile(vfs.resolvePath(currentCwd, fileArg));
+              } catch (e) {
+                out = 'grep: ' + (e.message || 'file error');
+                break;
+              }
+            } else if (pipedInput !== null) {
+              textToGrep = pipedInput;
+            }
+
+            var re = new RegExp(patternStr, ignoreCase ? 'i' : '');
+            var lines = textToGrep.split(/\r?\n/);
+            var matched = lines.filter(function (line) {
+              var m = re.test(line);
+              return invert ? !m : m;
+            });
+            out = matched.join('\n');
+          }
+        }
+        break;
+
+      case 'wc':
+        var countLines = false, countWords = false, countChars = false;
+        var wcFile = null;
+        for (var wi = 0; wi < args.length; wi++) {
+          if (args[wi] === '-l') countLines = true;
+          else if (args[wi] === '-w') countWords = true;
+          else if (args[wi] === '-c') countChars = true;
+          else if (!wcFile) wcFile = args[wi];
+        }
+        var textToWc = '';
+        var vfsWc = getFS();
+        if (wcFile && vfsWc) {
+          try {
+            textToWc = vfsWc.readFile(vfsWc.resolvePath(currentCwd, wcFile));
+          } catch (e) {
+            out = 'wc: ' + (e.message || 'file error');
+            break;
+          }
+        } else if (pipedInput !== null) {
+          textToWc = pipedInput;
+        }
+
+        var numLines = textToWc ? textToWc.split(/\r?\n/).length : 0;
+        var numWords = textToWc.trim() ? textToWc.trim().split(/\s+/).length : 0;
+        var numChars = textToWc.length;
+
+        if (!countLines && !countWords && !countChars) {
+          countLines = true;
+          countWords = true;
+          countChars = true;
+        }
+
+        var wcRes = [];
+        if (countLines) wcRes.push(numLines);
+        if (countWords) wcRes.push(numWords);
+        if (countChars) wcRes.push(numChars);
+        out = wcRes.join('   ') + (wcFile ? ' ' + wcFile : '');
+        break;
+
+      case 'sort':
+        var reverse = false;
+        var sortFile = null;
+        for (var si = 0; si < args.length; si++) {
+          if (args[si] === '-r') reverse = true;
+          else if (!sortFile) sortFile = args[si];
+        }
+        var textToSort = '';
+        var vfsSort = getFS();
+        if (sortFile && vfsSort) {
+          try {
+            textToSort = vfsSort.readFile(vfsSort.resolvePath(currentCwd, sortFile));
+          } catch (e) {
+            out = 'sort: ' + (e.message || 'file error');
+            break;
+          }
+        } else if (pipedInput !== null) {
+          textToSort = pipedInput;
+        }
+        var sortLines = textToSort.split(/\r?\n/);
+        sortLines.sort();
+        if (reverse) sortLines.reverse();
+        out = sortLines.join('\n');
+        break;
+
+      case 'uniq':
+        var uniqFile = args[0];
+        var textToUniq = '';
+        var vfsUniq = getFS();
+        if (uniqFile && vfsUniq) {
+          try {
+            textToUniq = vfsUniq.readFile(vfsUniq.resolvePath(currentCwd, uniqFile));
+          } catch (e) {
+            out = 'uniq: ' + (e.message || 'file error');
+            break;
+          }
+        } else if (pipedInput !== null) {
+          textToUniq = pipedInput;
+        }
+        var uLines = textToUniq.split(/\r?\n/);
+        var deduped = [];
+        for (var ui = 0; ui < uLines.length; ui++) {
+          if (ui === 0 || uLines[ui] !== uLines[ui - 1]) {
+            deduped.push(uLines[ui]);
+          }
+        }
+        out = deduped.join('\n');
+        break;
+
+      case 'head':
+        var headCount = 10;
+        var headFile = null;
+        for (var hi = 0; hi < args.length; hi++) {
+          if (args[hi] === '-n' && args[hi + 1]) {
+            headCount = parseInt(args[hi + 1], 10) || 10;
+            hi++;
+          } else if (!headFile) {
+            headFile = args[hi];
+          }
+        }
+        var textToHead = '';
+        var vfsHead = getFS();
+        if (headFile && vfsHead) {
+          try {
+            textToHead = vfsHead.readFile(vfsHead.resolvePath(currentCwd, headFile));
+          } catch (e) {
+            out = 'head: ' + (e.message || 'file error');
+            break;
+          }
+        } else if (pipedInput !== null) {
+          textToHead = pipedInput;
+        }
+        var hLines = textToHead.split(/\r?\n/);
+        out = hLines.slice(0, headCount).join('\n');
+        break;
+
+      case 'tail':
+        var tailCount = 10;
+        var tailFile = null;
+        for (var ti = 0; ti < args.length; ti++) {
+          if (args[ti] === '-n' && args[ti + 1]) {
+            tailCount = parseInt(args[ti + 1], 10) || 10;
+            ti++;
+          } else if (!tailFile) {
+            tailFile = args[ti];
+          }
+        }
+        var textToTail = '';
+        var vfsTail = getFS();
+        if (tailFile && vfsTail) {
+          try {
+            textToTail = vfsTail.readFile(vfsTail.resolvePath(currentCwd, tailFile));
+          } catch (e) {
+            out = 'tail: ' + (e.message || 'file error');
+            break;
+          }
+        } else if (pipedInput !== null) {
+          textToTail = pipedInput;
+        }
+        var tLines = textToTail.split(/\r?\n/);
+        out = tLines.slice(Math.max(0, tLines.length - tailCount)).join('\n');
+        break;
 
       default:
         out = "pip-sh: command not found: " + cmd + ". Type 'help' for instructions.";
@@ -236,7 +685,78 @@
     return { ok: true, output: out };
   }
 
+  function executeCommand(input) {
+    var raw = input ? input.trim() : '';
+    if (!raw) return { ok: true, output: '' };
+
+    history.push(raw);
+    historyIdx = -1;
+    pendingBuffer = '';
+
+    // Check for redirection: >> or >
+    var isAppend = false;
+    var redirectTarget = null;
+    var cmdToRun = raw;
+
+    var appendIdx = raw.indexOf('>>');
+    var overwriteIdx = raw.indexOf('>');
+
+    if (appendIdx !== -1) {
+      isAppend = true;
+      cmdToRun = raw.substring(0, appendIdx).trim();
+      redirectTarget = raw.substring(appendIdx + 2).trim();
+    } else if (overwriteIdx !== -1) {
+      isAppend = false;
+      cmdToRun = raw.substring(0, overwriteIdx).trim();
+      redirectTarget = raw.substring(overwriteIdx + 1).trim();
+    }
+
+    // Process pipeline stages split by |
+    var stages = cmdToRun.split('|');
+    var currentOutput = '';
+
+    for (var i = 0; i < stages.length; i++) {
+      var stageCmd = stages[i].trim();
+      if (!stageCmd) continue;
+
+      var res = executeSingle(stageCmd, i > 0 ? currentOutput : null);
+      if (res.clear) {
+        return res;
+      }
+      currentOutput = res.output;
+    }
+
+    // Stream redirection into PipFS
+    if (redirectTarget) {
+      var vfs = getFS();
+      if (!vfs) {
+        return { ok: false, output: 'redirect: file system not available' };
+      }
+      try {
+        var resolved = vfs.resolvePath(currentCwd, redirectTarget);
+        if (isAppend) {
+          var existing = '';
+          try { existing = vfs.readFile(resolved); } catch (e) {}
+          var content = existing ? (existing + '\n' + currentOutput) : currentOutput;
+          vfs.writeFile(resolved, content);
+        } else {
+          vfs.writeFile(resolved, currentOutput);
+        }
+        return { ok: true, output: '' };
+      } catch (e) {
+        return { ok: false, output: 'redirect: ' + (e.message || 'write error') };
+      }
+    }
+
+    return { ok: true, output: currentOutput };
+  }
+
   var PARAM_HINTS = {
+    blocks: {
+      params: ['stats', 'export'],
+      hint: ' [stats|export]',
+      pills: ['blocks stats', 'blocks export']
+    },
     theme: {
       params: ['day', 'night', 'contrast'],
       hint: ' [day|night|contrast]',
@@ -252,6 +772,11 @@
       hint: ' [chime|lullaby]',
       pills: ['play chime', 'play lullaby']
     },
+    crt: {
+      params: ['on', 'off'],
+      hint: ' [on|off]',
+      pills: ['crt on', 'crt off']
+    },
     calc: {
       params: ['24 * 7', '12 * 8', '100 / 4', '2 ^ 8'],
       hint: ' <expr> (e.g. 24 * 7)',
@@ -266,6 +791,11 @@
       params: ['on', 'off'],
       hint: ' [on|off]',
       pills: ['quiet on', 'quiet off']
+    },
+    sleep: {
+      params: ['15', '30', '45', 'cancel'],
+      hint: ' [minutes]',
+      pills: ['sleep 15', 'sleep 30', 'sleep cancel']
     }
   };
 
@@ -492,6 +1022,8 @@
         appendLine('pip@midnight:~$ ' + val, true);
         var res = executeCommand(val);
         input.value = '';
+        historyIdx = -1;
+        pendingBuffer = '';
         resetTabCycle();
         updateGhostAndSuggestions();
 
@@ -504,22 +1036,27 @@
         if (audio.isOn()) audio.pop();
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        if (history.length > 0 && historyIndex > 0) {
-          historyIndex--;
-          input.value = history[historyIndex];
+        if (cmdHistory.length > 0) {
+          if (historyIdx === -1) {
+            pendingBuffer = input.value;
+            historyIdx = cmdHistory.length - 1;
+          } else if (historyIdx > 0) {
+            historyIdx--;
+          }
+          input.value = cmdHistory[historyIdx];
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        if (historyIndex < history.length - 1) {
-          historyIndex++;
-          input.value = history[historyIndex];
-          setCursorEnd(input);
-          updateGhostAndSuggestions();
-        } else {
-          historyIndex = history.length;
-          input.value = '';
+        if (historyIdx !== -1) {
+          if (historyIdx < cmdHistory.length - 1) {
+            historyIdx++;
+            input.value = cmdHistory[historyIdx];
+          } else {
+            historyIdx = -1;
+            input.value = pendingBuffer;
+          }
           setCursorEnd(input);
           updateGhostAndSuggestions();
         }
@@ -547,7 +1084,9 @@
     init: initTerminal,
     executeCommand: executeCommand,
     autocomplete: autocomplete,
-    getHistory: function () { return history; },
+    getHistory: function () { return cmdHistory; },
+    cmdHistory: cmdHistory,
+    getHistoryIdx: function () { return historyIdx; },
     COMMANDS: COMMANDS,
     PARAM_HINTS: PARAM_HINTS
   };
